@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorSecondary"
+    tools:context=".BluetoothPermission">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="top"
+        android:orientation="vertical"
+        android:paddingBottom="64dp"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="64dp"
+        tools:layout_editor_absoluteX="32dp"
+        tools:layout_editor_absoluteY="32dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Welcome!"
+            android:textColor="@color/colorTextLight"
+            android:textSize="@dimen/intro_title_size" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="78dp"
+            android:text="@string/intro_main_text"
+            android:textColor="@color/colorSecondaryLight"
+            android:textColorLink="@color/colorTextSubtle"
+            android:textSize="@dimen/intro_text_size" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:paddingBottom="32dp"
+            android:paddingTop="32dp"
+            android:src="@mipmap/urbantrees_icon" />
+
+        <Switch
+            android:id="@+id/intro_main_collect_toggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:paddingBottom="20dp"
+            android:paddingTop="20dp"
+            android:text="I want to collect data from trees"
+            android:textColor="@color/colorSecondaryLight"
+            android:textOff="You can change this at any time in the settings menu"
+            android:textSize="@dimen/intro_text_size"
+            tools:layout_editor_absoluteX="32dp"
+            tools:layout_editor_absoluteY="450dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

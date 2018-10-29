@@ -1,3 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Stadtbäume als Klimabotschafter</string>
+    <string name="app_name">Stadtbäume</string>
+    <string name="found_device_page_loading">Lade beacon Information...</string>
+    <string name="intro_partners">In Kooperation mit</string>
+    <string name="start_ble_search">Suche nach beacons in der Nähe...</string>
+    <string name="permreq_explanation">Please allow this app to access and control low accuracy location and Bluetooth while opened. If not, this app cann\'t function.</string>
+    <string name="permreq_btn_yes">Erlauben</string>
+    <string name="close_app">Beenden</string>
+    <string name="error_no_ble">Ihr Gerät unterstützt Bluetooth nicht.\nLeider kann diese App nicht ohne Blutooth genutzt werden.</string>
+    <string name="error_jsonfetch">Die website des Beacons konnte nicht gefunden werden.</string>
+    <string name="error_no_internet">Keine Internetverbindung verfügbar.\nBitte schalten Sie WLAN oder mobile Daten ein um fortzufahren.</string>
+    <string name="retry">Wiederholen</string>
+    <string name="info_stop_scan_ble_off">Suche nach Beacons wurde durch Deaktivierung von Bluetooth beendet.</string>
+    <string name="intro_partners_addendum">und 12 Schulen aus Deutschland, Österreich und Ungarn</string>
+    <string name="intro_subtitle">Ein Sparkling Science Projekt</string>
+    <string name="enable">Aktivieren</string>
+    <string name="enable_location_explanation">Bitte schalten Sie die Standortbestimmung ein um fortzufahren.\nÜberprüfen Sie, ob netzwerkbasierte Standortbestimmung aktiviert ist und kehren Sie zurück zur App.</string>
+    <string name="ble_device_searching">Suche nach Beacons</string>
+    <string name="ble_device_connecting">Verbinde mit Beacon</string>
+    <string name="ble_device_connected">Beacon verbunden!</string>
+    <string name="ble_uart_fetching">Empfange Sensordaten</string>
+    <string name="ble_device_connection_failed">Verbindung mit Beacon fehlgeschlagen</string>
+    <string name="ble_uart_fetch_failed">Empfangen von Sensordaten fehlgeschlagen</string>
+    <string name="ble_uart_fetched">Sensordaten empfangen!</string>
+    <string name="intro_nav_next">Weiter</string>
+    <string name="intro_nav_previous">Zurück</string>
+    <string name="intro_nav_done">Fertig</string>
+    <string name="intro_main_title">Willkommen!</string>
+    <string name="intro_nav_request_permission">Erlaubnis erteilen</string>
+    <string name="intro_done_title">Alles vorbereitet!</string>
+    <string name="intro_done_text">Wir wünschen viel Spaß beim Benützen der App.</string>
+    <string name="intro_bluetooth_permission_request_button">Bluetooth &amp; Standort zulassen</string>
+    <string name="http_fetch_devices">Bereite Verbindung vor</string>
+    <string name="http_sending_data">Sende Sensordaten</string>
 </resources>

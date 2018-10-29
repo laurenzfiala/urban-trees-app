@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#ffca28</color>
+    <color name="loading_text">#212121</color>
+    <color name="loading_text_subtle">#9e9e9e</color>
+
+    <!-- palette colors -->
+    <color name="colorPrimaryDark">#303f9f</color>
+    <color name="colorPrimary">#385fba</color>
+    <color name="colorPrimaryLight">#bbc2d1</color>
+
+    <color name="colorSecondaryDark">#447e31</color>
+    <color name="colorSecondary">#518c3d</color>
+    <color name="colorSecondaryLight">#c5debc</color>
+
+    <color name="colorTertiaryDark">#5d317e</color>
+    <color name="colorTertiary">#694993</color>
+    <color name="colorTertiaryLight">#c5bcde</color>
+
+    <color name="colorText">#000000</color>
+    <color name="colorTextLight">#FFFFFF</color>
+    <color name="colorTextSubtle">#CCCCCC</color>
+
+    <array name="introDotActiveColors">
+        <item>@color/colorSecondaryLight</item>
+        <item>@color/colorPrimaryLight</item>
+        <item>@color/colorTertiaryLight</item>
+    </array>
+
+    <array name="introDotInactiveColors">
+        <item>@color/colorSecondaryDark</item>
+        <item>@color/colorPrimaryDark</item>
+        <item>@color/colorTertiaryDark</item>
+    </array>
+
 </resources>
