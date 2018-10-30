@@ -46,10 +46,10 @@ public class IntroActivity extends FragmentActivity {
 
         // Checking for first time launch - before calling setContentView()
         prefManager = new PreferenceManager(this);
-        /**if (!prefManager.isFirstLaunch()) {
+        if (!prefManager.isFirstLaunch()) {
             launchHomeScreen();
-            finish();
-        }*/
+            return;
+        }
 
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);

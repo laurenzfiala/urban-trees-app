@@ -24,6 +24,12 @@ public class HttpManager extends HasContext {
 
     private static final String LOGGING_TAG = HttpManager.class.getName();
 
+    private String apiKeyHeaderKey;
+    private String apiKeyHeaderValue;
+
+    private String deviceListUrl;
+    private String beaconSettingsUrl;
+
     private Beacon[] beacons;
 
     public HttpManager(Activity context) {
@@ -43,9 +49,9 @@ public class HttpManager extends HasContext {
 
             f.execute(
                     new HttpHandlerParams(
-                            "http://192.168.1.100/beacon/all/status/OK",
+                            this.deviceListUrl,
                             HttpHandlerMethod.GET,
-                            new HttpHeader[]{new HttpHeader(MainActivity.HEADER_KEY_AUTH, MainActivity.HEADER_VALUE_AUTH)},
+                            new HttpHeader[]{new HttpHeader(this.apiKeyHeaderKey, this.apiKeyHeaderValue)},
                             null
                     )
             );
@@ -75,7 +81,7 @@ public class HttpManager extends HasContext {
      * @param beaconId ID of connected beacon to fetch settings from.
      * @param callbackFn Executed upon successful execution.
      */
-    public void getBeaconSettings(int beaconId, Callback<BeaconSettings> callbackFn) {
+    public void getBeaconSettings(int beaconId, Callback<Beacon> callbackFn) {
 
         // TODO make threaded (currently blocks startup)
         HttpHandler f = new HttpHandler(this.context);
@@ -84,9 +90,9 @@ public class HttpManager extends HasContext {
 
             f.execute(
                     new HttpHandlerParams(
-                            "http://192.168.1.100/beacon/" + beaconId + "/settings",
+                            this.beaconSettingsUrl.replaceAll("\\{beaconId\\}", beaconId + ""),
                             HttpHandlerMethod.GET,
-                            new HttpHeader[]{new HttpHeader(MainActivity.HEADER_KEY_AUTH, MainActivity.HEADER_VALUE_AUTH)},
+                            new HttpHeader[]{new HttpHeader(this.apiKeyHeaderKey, this.apiKeyHeaderValue)},
                             null
                     )
             );
@@ -95,7 +101,26 @@ public class HttpManager extends HasContext {
 
             Log.d(LOGGING_TAG, "Fetched beacon settings from remote successfully.");
 
-            callbackFn.call(new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(res.getResponseValue(), BeaconSettings.class));
+            BeaconSettings settings = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    .readValue(res.getResponseValue(), BeaconSettings.class);
+
+            Beacon beacon = null;
+            for (Beacon b : this.beacons) {
+                if (b.getId() == beaconId) {
+                    beacon = b;
+                    break;
+                }
+            }
+
+            if (beacon == null) {
+                Log.e(LOGGING_TAG, "Beacon with ID " + beaconId + " not found in beacon list.");
+                callbackFn.error(new Throwable("Beacon settings could not be associated with beacon."));
+            }
+
+            beacon.setSettings(settings);
+
+            callbackFn
+                .call(beacon);
 
         }catch (Throwable t) {
             Log.e(LOGGING_TAG, t.getMessage(), t);
@@ -136,4 +161,37 @@ public class HttpManager extends HasContext {
 
     }
 
+    public String getApiKeyHeaderKey() {
+        return apiKeyHeaderKey;
+    }
+
+    public void setApiKeyHeaderKey(String apiKeyHeaderKey) {
+        this.apiKeyHeaderKey = apiKeyHeaderKey;
+    }
+
+    public String getApiKeyHeaderValue() {
+        return apiKeyHeaderValue;
+    }
+
+    public void setApiKeyHeaderValue(String apiKeyHeaderValue) {
+        this.apiKeyHeaderValue = apiKeyHeaderValue;
+    }
+
+    public String getDeviceListUrl() {
+        return deviceListUrl;
+    }
+
+    public void setDeviceListUrl(String deviceListUrl) {
+        this.deviceListUrl = deviceListUrl;
+    }
+
+    public String getBeaconSettingsUrl() {
+        return beaconSettingsUrl;
+    }
+
+    public void setBeaconSettingsUrl(String beaconSettingsUrl) {
+        this.beaconSettingsUrl = beaconSettingsUrl;
+    }
+
 }
+

@@ -17,10 +17,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.security.auth.callback.CallbackHandler;
 
@@ -48,9 +50,6 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
 
     private static final String LOGGING_TAG = MainActivity.class.getName();
 
-    public static final String HEADER_KEY_AUTH = "x-api-key";
-    public static final String HEADER_VALUE_AUTH = "99707319-f5af-474f-95af-ef1372f3c2f1";
-
     /**
      * The {@link WebView} to show the webpage in.
      */
@@ -64,10 +63,20 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
 
     private HttpManager httpManager;
 
+    private Properties props;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        this.loadProperties();
+
+        this.httpManager = new HttpManager(this);
+        this.httpManager.setApiKeyHeaderKey(this.props.getProperty("api.key.header.key"));
+        this.httpManager.setApiKeyHeaderValue(this.props.getProperty("api.key"));
+        this.httpManager.setDeviceListUrl(this.props.getProperty("beacon.list.url"));
+        this.httpManager.setBeaconSettingsUrl(this.props.getProperty("beacon.settings.url"));
 
         //WebView.setWebContentsDebuggingEnabled(true);
 
@@ -80,14 +89,13 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
 
-        String cookieString = HEADER_KEY_AUTH + "=" + HEADER_VALUE_AUTH + "; Domain=urban-tree-climate.sbg.ac.at";
-        cookieManager.setCookie("urban-tree-climate.sbg.ac.at", cookieString);
+        String cookieString = this.httpManager.getApiKeyHeaderKey() + "=" + this.httpManager.getApiKeyHeaderValue() + "; Domain=" + this.props.getProperty("api.key.domain");
+        cookieManager.setCookie(this.props.getProperty("api.key.domain"), cookieString);
 
         this.webView.clearFormData();
-        this.webView.loadUrl("https://urban-tree-climate.sbg.ac.at/project");
+        this.webView.loadUrl(this.props.getProperty("initial.load.address"));
 
         MainActivity.this.showProgress(1, R.string.http_fetch_devices);
-        this.httpManager = new HttpManager(this);
         this.httpManager.fetchDeviceList(new Callback<Void>() {
 
             @Override
@@ -105,6 +113,21 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
             }
 
         });
+
+    }
+
+    /**
+     * Load config file.
+     */
+    private void loadProperties() {
+
+        this.props = new Properties();
+
+        try {
+            props.load(this.getClass().getResourceAsStream("/assets/config.properties"));
+        } catch (IOException e) {
+            Log.e(LOGGING_TAG, "Could not load config: " + e.getMessage(), e);
+        }
 
     }
 
@@ -246,10 +269,10 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
                 step = 3;
 
                 Beacon beacon = this.httpManager.getBeaconByAddress(this.uartManager.getCurrentDevice().getAddress());
-                this.httpManager.getBeaconSettings(beacon.getId(), new Callback<BeaconSettings>() {
+                this.httpManager.getBeaconSettings(beacon.getId(), new Callback<Beacon>() {
                     @Override
-                    public void call(BeaconSettings settings) {
-                        MainActivity.this.uartManager.setCurrentSettings(settings);
+                    public void call(Beacon beacon) {
+                        MainActivity.this.uartManager.setCurrentBeacon(beacon);
                         MainActivity.this.uartManager.populateCommands();
                         MainActivity.this.uartManager.connectAndExecuteCommand();
                     }
@@ -287,7 +310,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
                             Runnable redirectRunnable = new Runnable() {
                                 @Override
                                 public void run() {
-                                    MainActivity.this.webView.loadUrl("http://192.168.1.100:4200/tree/9990?readout=successful");
+                                    MainActivity.this.webView.loadUrl(MainActivity.this.props.getProperty("beacontransfer.load.address").replaceAll("\\{treeId\\}", MainActivity.this.uartManager.getCurrentBeacon().getTreeId() + ""));
                                 }
                             };
                             mainHandler.post(redirectRunnable);
@@ -329,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
     private void sendBeaconData(Callback callback) throws JsonProcessingException {
 
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(HEADER_KEY_AUTH, HEADER_VALUE_AUTH);
+        headers.put(this.httpManager.getApiKeyHeaderKey(), this.httpManager.getApiKeyHeaderValue());
 
         List<Object> datasets = new ArrayList<Object>();
         for (UARTResponse response : UARTManager.LOGGER_COMMAND.getResponses()) {
@@ -350,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
         try {
             f.execute(
                     new HttpHandlerParams(
-                            "http://192.168.1.100/beacon/" + "9990" + "/data",
+                            this.props.getProperty("beacontransfer.api").replaceFirst("\\{beaconId\\}", this.uartManager.getCurrentBeacon().getDeviceId()),
                             HttpHandlerMethod.PUT,
                             headers,
                             test

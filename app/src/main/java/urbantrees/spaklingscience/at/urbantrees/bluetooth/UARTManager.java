@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
 import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeEmitter;
 import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
@@ -51,7 +52,7 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
 
     private urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice currentDevice;
 
-    private BeaconSettings currentSettings;
+    private Beacon currentBeacon;
 
     private static final int COMMAND_TRIES = 3;
 
@@ -160,7 +161,7 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
             Log.d(LOGGING_TAG, "Device seems to be locked, unlocking now.");
             this.commandQueue.addFirst(
                     new UARTCommand(
-                            "*pwd" + this.getCurrentSettings().getPin(),
+                            "*pwd" + this.getCurrentBeacon().getSettings().getPin(),
                             UARTResponseStrategy.SKIP_UNMATCHED
                     )
             );
@@ -215,7 +216,7 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
         this.commandQueue.offer(LOGGER_COMMAND);
         this.commandQueue.offer(
                 new UARTCommand(
-                        "*pwd" + this.getCurrentSettings().getPin(),
+                        "*pwd" + this.getCurrentBeacon().getSettings().getPin(),
                         UARTResponseStrategy.SKIP_UNMATCHED
                 )
         );
@@ -251,11 +252,11 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
         return currentDevice;
     }
 
-    public BeaconSettings getCurrentSettings() {
-        return currentSettings;
+    public Beacon getCurrentBeacon() {
+        return currentBeacon;
     }
 
-    public void setCurrentSettings(BeaconSettings currentSettings) {
-        this.currentSettings = currentSettings;
+    public void setCurrentBeacon(Beacon currentBeacon) {
+        this.currentBeacon = currentBeacon;
     }
 }
