@@ -27,7 +27,6 @@
     <string name="intro_nav_previous">Zurück</string>
     <string name="intro_nav_done">Fertig</string>
     <string name="intro_main_title">Willkommen!</string>
-    <string name="intro_nav_request_permission">Erlaubnis erteilen</string>
     <string name="intro_done_title">Alles vorbereitet!</string>
     <string name="intro_done_text">Wir wünschen viel Spaß beim Benützen der App.</string>
     <string name="intro_bluetooth_permission_request_button">Bluetooth &amp; Standort zulassen</string>

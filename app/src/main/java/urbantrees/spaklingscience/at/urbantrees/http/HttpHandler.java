@@ -4,14 +4,25 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 /**
  * TODO doc
@@ -51,17 +62,47 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
 
         Log.i(LOGGING_TAG, "Starting HTTP request to " + params.getUrl() + "...");
 
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
         OutputStreamWriter writer = null;
         BufferedReader reader = null;
         StringBuilder responsePayload = null;
 
         try {
 
+            // TODO only create trustmanager once
+            SSLContext context = null;
+            try {
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream caInput = this.getClass().getResourceAsStream("/assets/DigiCertCA.crt");
+                Certificate ca;
+                try {
+                    ca = cf.generateCertificate(caInput);
+                    System.out.println("ca=" + ((X509Certificate) ca).getSubjectDN());
+                } finally {
+                    caInput.close();
+                }
+
+                String keyStoreType = KeyStore.getDefaultType();
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                keyStore.load(null, null);
+                keyStore.setCertificateEntry("ca", ca);
+
+                String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+                TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+                tmf.init(keyStore);
+
+                context = SSLContext.getInstance("TLS");
+                context.init(null, tmf.getTrustManagers(), null);
+            } catch (Throwable t) {
+                Log.e(LOGGING_TAG, t.getMessage(), t);
+            }
+
+
             URL url = new URL(params.getUrl());
-            connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpsURLConnection) url.openConnection();
 
             // Connection parameters
+            connection.setSSLSocketFactory(context.getSocketFactory());
             connection.setRequestMethod(params.getMethod().toString());
             connection.setReadTimeout(params.getTimeout());
             //connection.setDoOutput(true);

@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
         this.props = new Properties();
 
         try {
-            props.load(this.getClass().getResourceAsStream("/assets/config.properties"));
+            props.load(this.getClass().getResourceAsStream("/assets/config-prod.properties"));
         } catch (IOException e) {
             Log.e(LOGGING_TAG, "Could not load config: " + e.getMessage(), e);
         }
