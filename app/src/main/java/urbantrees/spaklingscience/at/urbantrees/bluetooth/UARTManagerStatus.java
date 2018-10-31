@@ -11,7 +11,7 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 public enum UARTManagerStatus {
 
     /**
-     * TODO
+     * Emitted when starting a device search.
      */
     DEVICE_SEARCHING,
 
@@ -43,7 +43,8 @@ public enum UARTManagerStatus {
     DEVICE_INFO_FETCH,
 
     /**
-     * TODO
+     * Emitted every time a data packet
+     * is received.
      */
     DEVICE_INFO_PART_FETCHED,
 

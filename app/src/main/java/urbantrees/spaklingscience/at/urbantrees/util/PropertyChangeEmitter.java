@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 /**
- * TODO
+ * Makes emitting property changes using {@link PropertyChangeSupport} easier.
  * @author Laurenz Fiala
  * @since 2018/05/16
  */

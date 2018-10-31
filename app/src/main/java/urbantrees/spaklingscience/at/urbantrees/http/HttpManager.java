@@ -9,14 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-import urbantrees.spaklingscience.at.urbantrees.activities.MainActivity;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
 import urbantrees.spaklingscience.at.urbantrees.util.HasContext;
 
 /**
- * TODO doc
+ * Contains http request methods and holds some app objects.
  * @author Laurenz Fiala
  * @since 2018/10/27
  */

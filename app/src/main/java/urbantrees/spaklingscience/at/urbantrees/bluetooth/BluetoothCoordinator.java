@@ -173,7 +173,7 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
      * continue searching for all devices including
      * the failed one.
      */
-    public void resetNearstDevice() {
+    public void resetNearestDevice() {
         this.nearestDevice = null;
     }
 

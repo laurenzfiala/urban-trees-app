@@ -33,4 +33,8 @@
     <string name="intro_bluetooth_permission_request_button">Bluetooth &amp; Standort zulassen</string>
     <string name="http_fetch_devices">Bereite Verbindung vor</string>
     <string name="http_sending_data">Sende Sensordaten</string>
+    <string name="beacon_settings_fetch_failed">Beacon-Einstellungen konnten nicht geladen werden.</string>
+    <string name="beacon_data_send_failed">Beacon-Daten konnten nicht gesendet werden.</string>
+    <string name="beacon_list_fetch_failed">Beacon-Liste konnte nicht geladen werden.</string>
+    <string name="beacon_data_get_failed">Beacon-Daten konnten nicht empfangen werden, versuche erneut in einigen Sekunden...</string>
 </resources>

@@ -6,7 +6,7 @@ import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTManagerStatus;
 
 /**
- * TODO
+ * Type of properties throughout the project.
  * @author Laurenz Fiala
  * @since 2018/05/17
  */

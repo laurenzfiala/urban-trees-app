@@ -73,8 +73,9 @@ public class Dialogs {
     }
 
     /**
-     * TODO
-     * @param text
+     * Show progress snackbar, or if it already is shown, update its text.
+     * @param view The containing view of the calling actiivty.
+     * @param text The Snackbar's test to show.
      */
     public static final void progressSnackbar(View view, String text) {
 

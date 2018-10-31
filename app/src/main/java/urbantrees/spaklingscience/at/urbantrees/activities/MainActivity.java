@@ -102,14 +102,24 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
             public void call(Void v) {
                 MainActivity.this.uartManager = new UARTManager(MainActivity.this);
                 MainActivity.this.uartManager.listen(PropertyChangeType.UART_MANAGER_STATUS, MainActivity.this);
-                if (MainActivity.this.uartManager.enableBluetooth()) {
-                    MainActivity.this.uartManager.fetchDeviceInfo(MainActivity.this.httpManager.getAllowedDeviceAddresses());
-                }
+
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        if (MainActivity.this.uartManager.enableBluetooth()) {
+                            MainActivity.this.uartManager.fetchDeviceInfo(MainActivity.this.httpManager.getAllowedDeviceAddresses());
+                        }
+                    }
+                };
+                Thread t = new Thread(r);
+                t.start();
             }
 
             @Override
             public void error(Throwable t) {
                 Log.e(LOGGING_TAG, "Error fetching device list: " + t.getMessage(), t);
+                Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_list_fetch_failed));
+
             }
 
         });
@@ -280,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
                     @Override
                     public void error(Throwable t) {
                         Log.e(LOGGING_TAG, t.getMessage(), t);
+                        Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_settings_fetch_failed));
                     }
                 });
 
@@ -294,6 +305,16 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
                 break;
             case DEVICE_INFO_FETCH_FAILED:
                 stringId = R.string.ble_uart_fetch_failed;
+                Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
+
+                Runnable redirectRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivity.this.webView.loadUrl(MainActivity.this.props.getProperty("beacontransfer.load.address.failed").replaceAll("\\{treeId\\}", MainActivity.this.uartManager.getCurrentBeacon().getTreeId() + ""));
+                    }
+                };
+                mainHandler.post(redirectRunnable);
+
                 break;
             case DEVICE_INFO_FETCHED:
                 stringId = R.string.http_sending_data;
@@ -319,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
                         @Override
                         public void error(Throwable t) {
                             Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
+                            Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
                         }
                     });
                 } catch (Throwable t) {
@@ -373,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
         try {
             f.execute(
                     new HttpHandlerParams(
-                            this.props.getProperty("beacontransfer.api").replaceFirst("\\{beaconId\\}", this.uartManager.getCurrentBeacon().getDeviceId()),
+                            this.props.getProperty("beacontransfer.api").replaceFirst("\\{beaconId\\}", this.uartManager.getCurrentBeacon().getId() + ""),
                             HttpHandlerMethod.PUT,
                             headers,
                             test

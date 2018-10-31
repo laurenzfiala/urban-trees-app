@@ -29,14 +29,7 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
 
-        final int state1 = BluetoothGatt.STATE_CONNECTED;
-        final int state2 = BluetoothGatt.STATE_CONNECTING;
-        final int state3 = BluetoothGatt.STATE_DISCONNECTED;
-        final int state4 = BluetoothGatt.STATE_DISCONNECTING;
-
         this.propertyEmitter.notify(PropertyChangeType.GATT_STATUS, newState);
-
-        // TODO check for failed statuses and retry
 
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
