@@ -190,6 +190,7 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
             if (this.commandQueue.size() == 0) {
                 this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_FETCHED);
                 if (this.commandTriesExceeded) {
+                    this.commandTriesExceeded = false;
                     //Dialogs.progressSnackbar(this.context.findViewById(R.id.layout_root), this.context.getString(R.string.beacon_data_get_failed));
                     this.bluetoothCoordinator.resetNearestDevice();
                 }
