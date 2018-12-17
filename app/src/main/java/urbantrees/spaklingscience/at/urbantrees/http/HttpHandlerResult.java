@@ -1,7 +1,5 @@
 package urbantrees.spaklingscience.at.urbantrees.http;
 
-import java.util.Map;
-
 /**
  * Result of a {@link HttpHandler} invocation.
  * @see HttpHandler

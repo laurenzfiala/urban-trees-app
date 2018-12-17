@@ -10,6 +10,7 @@ import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements PropertyChangeLis
         this.webView = (WebView) findViewById(R.id.web_view);
         this.webView.getSettings().setJavaScriptEnabled(true);
         this.webView.getSettings().setDomStorageEnabled(true);
+        this.webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
         this.webView.setWebChromeClient(this.getWebChromeClient());
         //this.webView.clearCache(true);
 

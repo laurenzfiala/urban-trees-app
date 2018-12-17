@@ -41,7 +41,6 @@ public class HttpManager extends HasContext {
      */
     public void fetchDeviceList(Callback<Void> callbackFn) {
 
-        // TODO make threaded (currently blocks startup)
         HttpHandler f = new HttpHandler(this.context);
 
         try {

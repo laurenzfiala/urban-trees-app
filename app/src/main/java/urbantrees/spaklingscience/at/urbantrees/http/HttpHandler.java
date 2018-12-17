@@ -4,15 +4,14 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
@@ -60,9 +59,14 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
 
     private HttpHandlerResult executeInternal(HttpHandlerParams params) {
 
+        boolean isHttp = false;
+        if (params.getUrl().startsWith("http://")) {
+            isHttp = true;
+        }
+
         Log.i(LOGGING_TAG, "Starting HTTP request to " + params.getUrl() + "...");
 
-        HttpsURLConnection connection = null;
+        URLConnection connection = null;
         OutputStreamWriter writer = null;
         BufferedReader reader = null;
         StringBuilder responsePayload = null;
@@ -99,11 +103,17 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
 
 
             URL url = new URL(params.getUrl());
-            connection = (HttpsURLConnection) url.openConnection();
+
+            if (isHttp) {
+                connection = (HttpURLConnection) url.openConnection();
+                ((HttpURLConnection)connection).setRequestMethod(params.getMethod().toString());
+            } else {
+                connection = (HttpsURLConnection) url.openConnection();
+                ((HttpsURLConnection)connection).setSSLSocketFactory(context.getSocketFactory());
+                ((HttpsURLConnection)connection).setRequestMethod(params.getMethod().toString());
+            }
 
             // Connection parameters
-            connection.setSSLSocketFactory(context.getSocketFactory());
-            connection.setRequestMethod(params.getMethod().toString());
             connection.setReadTimeout(params.getTimeout());
             //connection.setDoOutput(true);
             //connection.setDoInput(true);
@@ -140,12 +150,19 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
                 }
             }
 
-            final int responseCode = connection.getResponseCode();
+            final int responseCode;
+            if (isHttp) {
+                responseCode = ((HttpURLConnection)connection).getResponseCode();
+            } else {
+                responseCode = ((HttpsURLConnection)connection).getResponseCode();
+            }
             Log.i(LOGGING_TAG, "Response code received: " + responseCode);
 
             return new HttpHandlerResult(responseCode, responsePayload != null ? responsePayload.toString() : null);
 
         } catch (IOException e) {
+            Log.e(LOGGING_TAG, e.getMessage());
+        } catch (Throwable e) {
             Log.e(LOGGING_TAG, e.getMessage());
         } finally {
             if (writer != null) {
@@ -155,7 +172,11 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
                 }
             }
             if (connection != null) {
-                connection.disconnect();
+                if (isHttp) {
+                    ((HttpURLConnection) connection).disconnect();
+                } else {
+                    ((HttpsURLConnection) connection).disconnect();
+                }
             }
         }
 
