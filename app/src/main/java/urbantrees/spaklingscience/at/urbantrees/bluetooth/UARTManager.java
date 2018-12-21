@@ -11,9 +11,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
-import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
 import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeEmitter;
 import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
 

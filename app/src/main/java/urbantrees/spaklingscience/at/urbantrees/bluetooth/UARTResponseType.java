@@ -329,7 +329,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
             List<UARTLogEntry> entries = new ArrayList<UARTLogEntry>();
 
             final byte[][] chars = pkg.getCharacteristics();
-            Double[][] vals = new Double[3][numLogs+5]; // log amount read-out may be outdated, so add buffer
+            Double[][] vals = new Double[3][numLogs]; // log amount read-out may be outdated, so add buffer
             int valIndex = 0, valMetricIndex = 0;
 
             charLoop:
@@ -338,11 +338,11 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                 for (int j = 0; j < chars[i].length; j += 2) {
                     final byte[] trimmedVal = ByteUtils.trim(Arrays.copyOfRange(chars[i], j, j+2));
                     final String stringValue = ByteUtils.toString(trimmedVal, UARTCommand.ENCODING);
-                    if (stringValue.equals(",,")) {
+                    if (stringValue.endsWith(",,")) {
                         valIndex++;
                         valMetricIndex = 0;
                         break;
-                    } else if (stringValue.endsWith(".")) {
+                    } else if (stringValue.equals(".")) {
                         break charLoop;
                     }
 

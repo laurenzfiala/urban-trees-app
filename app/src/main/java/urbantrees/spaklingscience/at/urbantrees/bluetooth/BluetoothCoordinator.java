@@ -120,11 +120,13 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
 
     }
 
+    private Object scanCallback;
+
     public void startScan() {
 
         if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
 
-            this.bluetoothAdapter.getBluetoothLeScanner().startScan(new ScanCallback() {
+            this.scanCallback = new ScanCallback() {
 
                 @Override
                 @TargetApi(21)
@@ -134,11 +136,12 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
 
                     super.onScanResult(callbackType, result);
                 }
-            });
+            };
+            this.bluetoothAdapter.getBluetoothLeScanner().startScan((ScanCallback) this.scanCallback);
 
         } else {
 
-            this.bluetoothAdapter.startLeScan(new BluetoothAdapter.LeScanCallback() {
+            this.scanCallback = new BluetoothAdapter.LeScanCallback() {
 
                 @Override
                 public void onLeScan(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -146,7 +149,22 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
                     BluetoothCoordinator.this.onDeviceFound(device, rssi);
 
                 }
-            });
+            };
+            this.bluetoothAdapter.startLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
+
+        }
+
+    }
+
+    public void stopScan() {
+
+        if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
+
+            this.bluetoothAdapter.getBluetoothLeScanner().stopScan((ScanCallback) this.scanCallback);
+
+        } else {
+
+            this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
 
         }
 
@@ -159,6 +177,9 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
         if (!this.filterAdresses.contains(bluetoothDevice.getAddress())) {
             return;
         }
+
+        this.stopScan();
+
         if (this.nearestDevice == null || !bluetoothDevice.equals(this.nearestDevice)) {
             this.nearestDevice = bluetoothDevice;
             this.notify(PropertyChangeType.BLUETOOTH_DEVICE, bluetoothDevice);
