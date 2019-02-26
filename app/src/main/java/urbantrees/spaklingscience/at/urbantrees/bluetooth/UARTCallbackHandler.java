@@ -1,35 +1,34 @@
 package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeEmitter;
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
-
 public class UARTCallbackHandler extends BluetoothGattCallback {
 
-    /**
-     * TODO we need to do this since bluetoothgattcallback is abstract as well
-     */
-    private PropertyChangeEmitter propertyEmitter;
+    private OnUARTCallbackHandlerChange listener;
 
     private UARTManager manager;
 
     private UARTDevice device;
 
-    public UARTCallbackHandler(Activity context, UARTManager manager) {
-        this.propertyEmitter = new PropertyChangeEmitter(context);
+    private boolean disabled = false;
+
+    public UARTCallbackHandler(UARTManager manager, OnUARTCallbackHandlerChange listener) {
         this.manager = manager;
+        this.listener = listener;
     }
 
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
 
-        this.propertyEmitter.notify(PropertyChangeType.GATT_STATUS, newState);
+        if (this.disabled) {
+            return;
+        }
+
+        this.listener.onGattStatusChanged(status, newState);
 
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
@@ -40,7 +39,11 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
 
-        if (!this.device.isTxNotificationEnabled()) {
+        if (this.disabled) {
+            return;
+        }
+
+        //if (!this.device.isTxNotificationEnabled()) {
 
             this.device.resolveCharacteristics(gatt);
 
@@ -49,9 +52,9 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
             device.getTxNotificationCharacteristic().setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             boolean isDescWriteOK = gatt.writeDescriptor(device.getTxNotificationCharacteristic());
 
-            this.device.setTxNotificationEnabled(isNotifyOK && isDescWriteOK);
+            //this.device.setTxNotificationEnabled(isNotifyOK && isDescWriteOK);
 
-        }
+        //}
 
         super.onServicesDiscovered(gatt, status);
     }
@@ -60,10 +63,14 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorWrite(gatt, descriptor, status);
 
+        if (this.disabled) {
+            return;
+        }
+
         try {
 
             UARTCommand command = this.manager.getCurrentCommand();
-            command.nextTry();
+            //command.nextTry();
 
             final byte[] sendVal = command.getCommandBytes();
             BluetoothGattCharacteristic rxChar = this.device.getRxCharacteristic();
@@ -72,7 +79,7 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
             gatt.writeCharacteristic(rxChar);
 
         } catch (Throwable t) {
-            this.getPropertyEmitter().notify(PropertyChangeType.THROWABLE, t);
+            this.listener.onGattCharacteristicWriteFailed(t, descriptor, status);
         }
 
     }
@@ -81,16 +88,20 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
 
-        this.getPropertyEmitter().notify(PropertyChangeType.GATT_CHARACTERISTIC, characteristic);
-
+        if (this.disabled) {
+            return;
+        }
+        this.listener.onGattCharacteristicChange(characteristic);
     }
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
 
-        this.getPropertyEmitter().notify(PropertyChangeType.GATT_CHARACTERISTIC, characteristic);
-
+        if (this.disabled) {
+            return;
+        }
+        this.listener.onGattCharacteristicChange(characteristic);
     }
 
     public UARTDevice getDevice() {
@@ -101,8 +112,14 @@ public class UARTCallbackHandler extends BluetoothGattCallback {
         this.device = device;
     }
 
-    public PropertyChangeEmitter getPropertyEmitter() {
-        return propertyEmitter;
+    public interface OnUARTCallbackHandlerChange {
+        void onGattCharacteristicChange(BluetoothGattCharacteristic characteristic);
+        void onGattCharacteristicWriteFailed(Throwable t, BluetoothGattDescriptor descriptor, int status);
+        void onGattStatusChanged(int status, int newState);
+    }
+
+    public void disable() {
+        this.disabled = true;
     }
 
 }

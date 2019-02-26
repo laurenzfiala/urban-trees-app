@@ -1,5 +1,7 @@
 package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
+import java.util.Date;
+
 /**
  * TODO
  * @author Laurenz Fiala
@@ -7,20 +9,20 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
  */
 public class UARTLogEntry {
 
-    private long observationDate;
+    private Date observationDate;
 
     private double temperature;
     private double humidity;
     private double dewPoint;
 
-    public UARTLogEntry(long observationDate, double temperature, double humidity, double dewPoint) {
+    public UARTLogEntry(Date observationDate, double temperature, double humidity, double dewPoint) {
         this.observationDate = observationDate;
         this.temperature = temperature;
         this.humidity = humidity;
         this.dewPoint = dewPoint;
     }
 
-    public long getObservationDate() {
+    public Date getObservationDate() {
         return observationDate;
     }
 

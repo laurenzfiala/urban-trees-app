@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="bgColor">#FAFAFA</color>
+    <color name="bgColorDark">#666666</color>
+
     <color name="colorAccent">#ffca28</color>
     <color name="loading_text">#212121</color>
     <color name="loading_text_subtle">#9e9e9e</color>
@@ -20,6 +23,9 @@
     <color name="colorText">#000000</color>
     <color name="colorTextLight">#FFFFFF</color>
     <color name="colorTextSubtle">#CCCCCC</color>
+    <color name="colorTextGrey">#888888</color>
+
+    <color name="dividerColor">#CCCCCC</color>
 
     <array name="introDotActiveColors">
         <item>@color/colorSecondaryLight</item>

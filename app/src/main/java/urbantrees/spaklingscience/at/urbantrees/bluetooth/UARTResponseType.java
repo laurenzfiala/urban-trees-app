@@ -2,6 +2,7 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
 import android.util.Log;
 
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         public int getResponseAmount(UARTResponsePackage pkg) { return 2; }
 
         @Override
-        public UARTResponse<Long> getResponse(final UARTResponsePackage pkg) throws Throwable {
+        public UARTResponse<Date> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
             if (!ByteUtils.toString(ByteUtils.trim(pkg.getCharacteristic(0)), UARTCommand.ENCODING).equals("Date yymmddhhmm:")) {
                 return null;
@@ -159,13 +160,13 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
 
             if ("00:00:00:00:00".equals(stringValue)) {
                 Log.w(this.getClass().getName(), "Reference Date is not set, using current date.");
-                return new UARTResponse<Long>(this, System.currentTimeMillis());
+                return new UARTResponse<Date>(this, new Date());
             }
 
             DateFormat dateFormat = new SimpleDateFormat("yy:MM:dd:HH:mm");
             Date deviceCurrentDate = dateFormat.parse(stringValue);
 
-            return new UARTResponse<Long>(this, deviceCurrentDate.getTime());
+            return new UARTResponse<Date>(this, deviceCurrentDate);
         }
     },
     ID {
@@ -319,7 +320,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         public UARTResponse<UARTLogEntry[]> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
             Integer numLogs = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.CURRENT_NUM_LOGS).getValue();
-            Long refDate = pkg.getPreviousCommands().<Long>findResponse(UARTResponseType.REFERENCE_DATE).getValue();
+            Long refDate = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE).getValue().getTime();
             Integer logFreq = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue();
 
             if (numLogs == null || refDate == null || logFreq == null) {
@@ -374,15 +375,15 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                     continue;
                 }
 
-                cal.add(Calendar.SECOND, -logFreq);
                 entries.add(
                         new UARTLogEntry(
-                                cal.getTimeInMillis(),
+                                cal.getTime(),
                                 vals[0][i],
                                 vals[1][i],
                                 vals[2][i]
                         )
                 );
+                cal.add(Calendar.SECOND, -logFreq);
 
             }
 
@@ -397,7 +398,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         @Override
         public UARTResponse<UARTLogEntry> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
-            Long refDate = pkg.getPreviousCommands().<Long>findResponse(UARTResponseType.REFERENCE_DATE).getValue();
+            Long refDate = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE).getValue().getTime();
             Integer logFreq = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue();
 
             if (refDate == null || logFreq == null) {
@@ -415,7 +416,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                 return null;
             }
             return new UARTResponse<UARTLogEntry>(this,
-                new UARTLogEntry(cal.getTimeInMillis(), Double.parseDouble(thd[0]), Double.parseDouble(thd[1]), Double.parseDouble(thd[2]))
+                new UARTLogEntry(cal.getTime(), Double.parseDouble(thd[0]), Double.parseDouble(thd[1]), Double.parseDouble(thd[2]))
             );
         }
     };

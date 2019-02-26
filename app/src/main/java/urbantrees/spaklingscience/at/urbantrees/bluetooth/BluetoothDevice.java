@@ -1,5 +1,9 @@
 package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
+import java.util.Objects;
+
+import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
+
 /**
  * TODO
  * @author Laurenz Fiala
@@ -9,19 +13,22 @@ public class BluetoothDevice {
 
     private int rssi;
 
-    private final android.bluetooth.BluetoothDevice device;
+    private Beacon beacon;
 
-    public BluetoothDevice(final android.bluetooth.BluetoothDevice device, final int rssi) {
-        this(device);
+    private final android.bluetooth.BluetoothDevice nativeDevice;
+
+    public BluetoothDevice(final android.bluetooth.BluetoothDevice nativeDevice, final int rssi) {
+        this(null, nativeDevice);
         this.rssi = rssi;
     }
 
-    public BluetoothDevice(final android.bluetooth.BluetoothDevice device) {
-        this.device = device;
+    public BluetoothDevice(final Beacon beacon, final android.bluetooth.BluetoothDevice nativeDevice) {
+        this.beacon = beacon;
+        this.nativeDevice = nativeDevice;
     }
 
     public String getAddress() {
-        return this.device.getAddress();
+        return this.nativeDevice.getAddress();
     }
 
     public int getRssi() {
@@ -32,8 +39,16 @@ public class BluetoothDevice {
         this.rssi = rssi;
     }
 
-    public android.bluetooth.BluetoothDevice getDevice() {
-        return device;
+    public android.bluetooth.BluetoothDevice getNativeDevice() {
+        return nativeDevice;
+    }
+
+    public Beacon getBeacon() {
+        return beacon;
+    }
+
+    public void setBeacon(Beacon beacon) {
+        this.beacon = beacon;
     }
 
     @Override
@@ -45,7 +60,12 @@ public class BluetoothDevice {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(this.getAddress());
+    }
+
+    @Override
     public String toString() {
-        return this.getAddress() + " / " + this.getDevice().getName();
+        return this.getAddress() + " / " + this.getNativeDevice().getName();
     }
 }

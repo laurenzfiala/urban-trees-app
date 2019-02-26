@@ -3,17 +3,11 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 import android.app.Activity;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.util.Log;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Deque;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
-
-import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeEmitter;
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
 
 /**
  * High level abstraction layer of the standard {@link android.bluetooth.BluetoothGatt}
@@ -21,9 +15,13 @@ import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
  * @author Laurenz Fiala
  * @since 2018/05/14
  */
-public class UARTManager extends PropertyChangeEmitter implements PropertyChangeListener {
+public class UARTManager implements UARTCallbackHandler.OnUARTCallbackHandlerChange {
 
     private static final String LOGGING_TAG = UARTManager.class.getName();
+
+    private Activity context;
+
+    private OnUARTManagerStatusChange listener;
 
     /**
      * TODO
@@ -36,6 +34,8 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
      * succeeding ones.
      */
     private Deque<UARTCommand> commandQueue = new LinkedBlockingDeque<UARTCommand>();
+
+    private int totalCommandAmount = 0;
 
     /**
      * TODO
@@ -51,8 +51,6 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
 
     private urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice currentDevice;
 
-    private Beacon currentBeacon;
-
     private static final int COMMAND_TRIES = 3;
 
     /**
@@ -61,109 +59,47 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
      */
     private boolean commandTriesExceeded = false;
 
-    public static final UARTCommand LOCK_CHECK_COMMAND = new UARTCommand(
-            "*batt",
-            UARTResponseStrategy.ORDERED_STRICT,
-            UARTResponseType.NON_EMPTY_NON_ERROR
-    );
+    private boolean stopped = false;
+    private boolean unlockDevice = true;
 
-    public static final UARTCommand SETTINGS_COMMAND = new UARTCommand(
-            "*info",
-            UARTResponseStrategy.SKIP_UNMATCHED,
-            UARTResponseType.DEVICE_NAME,
-            UARTResponseType.DEVICE_VERSION,
-            UARTResponseType.TRANSMISSION_STRENGTH,
-            UARTResponseType.BATTERY_LEVEL,
-            UARTResponseType.TEMPERATURE_UNITS,
-            UARTResponseType.MEMORY_CAPACITY,
-            UARTResponseType.REFERENCE_DATE,
-            UARTResponseType.ID,
-            UARTResponseType.PHYSICAL_BUTTON_ENABLED,
-            UARTResponseType.TEMPERATURE_CALIBRATION,
-            UARTResponseType.HUMIDITY_CALIBRATION
-    );
-    public static final UARTCommand TELEMETRICS_COMMAND = new UARTCommand(
-            "*tell",
-            UARTResponseStrategy.SKIP_UNMATCHED,
-            UARTResponseType.SENSOR_FREQUENCY,
-            UARTResponseType.LOG_FREQUENCY,
-            UARTResponseType.CURRENT_NUM_LOGS
-    );
-    public static final UARTCommand LOGGER_COMMAND = new UARTCommand(
-            "*logall",
-            UARTResponseStrategy.ORDERED_STRICT_REUSE_LAST,
-            UARTResponseType.LOG_ENTRY
-    );
-
-    public UARTManager(Activity context) {
-        super(context);
-
-        this.bluetoothCoordinator = new BluetoothCoordinator(context);
-        this.bluetoothCoordinator.listen(PropertyChangeType.BLUETOOTH_DEVICE, this);
-        this.bluetoothCoordinator.listen(PropertyChangeType.THROWABLE, this);
-    }
-
-    public boolean enableBluetooth() {
-
-        return this.bluetoothCoordinator.enableBluetooth();
-
-    }
-
-    public void fetchDeviceInfo(List<String> allowedBluetoothAdresses) {
-
-        this.bluetoothCoordinator.scanForDevices(allowedBluetoothAdresses);
-
+    public UARTManager(Activity context, BluetoothCoordinator bluetoothCoordinator, OnUARTManagerStatusChange listener) {
+        this.context = context;
+        this.listener = listener;
+        this.bluetoothCoordinator = bluetoothCoordinator;
     }
 
     @Override
-    public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-
-        if (PropertyChangeType.equals(propertyChangeEvent.getPropertyName(), PropertyChangeType.BLUETOOTH_DEVICE)) {
-
-            this.onBluetoothDeviceFound(PropertyChangeType.BLUETOOTH_DEVICE.cast(propertyChangeEvent.getNewValue()));
-            this.successfulCommands = new UARTCommandList();
-
-        } else if (PropertyChangeType.equals(propertyChangeEvent.getPropertyName(), PropertyChangeType.GATT_CHARACTERISTIC)) {
-
-            final BluetoothGattCharacteristic characteristic = PropertyChangeType.GATT_CHARACTERISTIC.cast(propertyChangeEvent.getNewValue());
-            this.onDataRead(characteristic);
-
-        } else if (PropertyChangeType.equals(propertyChangeEvent.getPropertyName(), PropertyChangeType.GATT_STATUS)) {
-
-            final int gattStatus = PropertyChangeType.GATT_STATUS.cast(propertyChangeEvent.getNewValue());
-            if (gattStatus == BluetoothGatt.STATE_DISCONNECTED) {
-                this.onBluetoothDeviceDisconnected();
-            }
-
-        } else if (PropertyChangeType.equals(propertyChangeEvent.getPropertyName(), PropertyChangeType.THROWABLE)) {
-
-            final Throwable t = PropertyChangeType.THROWABLE.cast(propertyChangeEvent.getNewValue());
-            Log.e(LOGGING_TAG, t.getMessage());
-            this.notify(PropertyChangeType.THROWABLE, t);
-
-        }
-
-    }
-
-    private void onDataRead(final BluetoothGattCharacteristic characteristic) {
+    public void onGattCharacteristicChange(BluetoothGattCharacteristic characteristic) {
 
         Log.d(LOGGING_TAG, "Reading data from device '" + this.currentDevice + "'...");
-        this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_PART_FETCHED);
 
         try {
             this.getCurrentCommand().addResponse(characteristic, this.successfulCommands);
         } catch (Throwable t) {
             Log.e(LOGGING_TAG, "Exception while adding response to command '" + this.getCurrentCommand() + "': " + t.getMessage());
-            this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_FETCH_FAILED);
+            this.listener.onDeviceDisconnected(false);
         }
 
     }
 
-    private void onBluetoothDeviceDisconnected() {
+    @Override
+    public void onGattCharacteristicWriteFailed(Throwable t, BluetoothGattDescriptor descriptor, int status) {
+        Log.e(LOGGING_TAG, t.getMessage());
+        // TODO check
+    }
 
-        // TODO
-        //
-        // handle case when nearest device is replaced by other device *during command execution*
+    @Override
+    public void onGattStatusChanged(int status, int newState) {
+        if (newState == BluetoothGatt.STATE_CONNECTING) {
+            this.listener.onDeviceConnecting();
+        } else if (newState == BluetoothGatt.STATE_CONNECTING) {
+            this.listener.onDeviceConnected();
+        } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+            this.onBluetoothDeviceDisconnected();
+        }
+    }
+
+    private void onBluetoothDeviceDisconnected() {
 
         this.gatt.close();
 
@@ -172,102 +108,159 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
             return;
         }
 
-        if (this.getCurrentCommand() == LOCK_CHECK_COMMAND && this.getCurrentCommand().getResponses().size() > 0 && (boolean) this.getCurrentCommand().getResponses().get(0).getValue() == false) {
+        if (this.getCurrentCommand().getType() == UARTCommandType.LOCK_CHECK_COMMAND && this.getCurrentCommand().getResponses().size() > 0) {
+
+            boolean isUnlocked = (boolean) this.getCurrentCommand().getResponses().get(0).getValue();
             this.finalizeCommand();
-            Log.d(LOGGING_TAG, "Device seems to be locked, unlocking now.");
-            this.commandQueue.addFirst(
-                    new UARTCommand(
-                            "*pwd" + this.getCurrentBeacon().getSettings().getPin(),
-                            UARTResponseStrategy.SKIP_UNMATCHED
-                    )
-            );
-            this.connectAndExecuteCommand();
+
+            if (isUnlocked ^ unlockDevice) {
+                Log.d(LOGGING_TAG, "Device seems to be " + (isUnlocked ? "unlocked" : "locked")
+                        + ", " + (unlockDevice ? "unlocking" : "locking") + " now.");
+                this.commandQueue.addFirst(
+                        UARTCommandType.LOCK_UNLOCK_COMMAND.getCommand(String.valueOf(this.getCurrentDevice().getBeacon().getSettings().getPin()))
+                );
+
+                this.unlockDevice = !this.unlockDevice;
+                this.connectAndExecuteCommand();
+            } else if (this.commandQueue.size() > 0) {
+                this.unlockDevice = !this.unlockDevice;
+                this.connectAndExecuteCommand();
+            } else {
+                if (this.stopped) {
+                    this.listener.onDeviceCancelled(this.getCurrentDevice());
+                } else {
+                    this.listener.onDeviceExecuted(this.getCurrentDevice());
+                }
+            }
+
         } else if (this.getCurrentCommand().isPotentiallyDone()) {
+
             Log.d(LOGGING_TAG, "Command '" + this.getCurrentCommand() + "' on device '" + this.currentDevice + "' execution done.");
+            this.listener.onDeviceCommandExecutionEnd(
+                    this.stopped,
+                    this.totalCommandAmount,
+                    this.totalCommandAmount - this.commandQueue.size(),
+                    this.getCurrentCommand()
+            );
             this.successfulCommands.add(this.finalizeCommand());
             if (this.commandQueue.size() == 0) {
-                this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_FETCHED);
+                this.listener.onDeviceDisconnected(true);
+                if (this.stopped) {
+                    this.listener.onDeviceCancelled(this.getCurrentDevice());
+                } else {
+                    this.listener.onDeviceExecuted(this.getCurrentDevice());
+                }
                 if (this.commandTriesExceeded) {
                     this.commandTriesExceeded = false;
-                    //Dialogs.progressSnackbar(this.context.findViewById(R.id.layout_root), this.context.getString(R.string.beacon_data_get_failed));
-                    this.bluetoothCoordinator.resetNearestDevice();
                 }
             } else {
                 this.connectAndExecuteCommand();
             }
+
         } else {
+
             Log.e(LOGGING_TAG, "BLE device was disconnected before command '" + this.getCurrentCommand() + "' could be executed.");
 
             int tries = this.getCurrentCommand().getTries();
             if (tries >= COMMAND_TRIES) {
-                this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_FETCH_FAILED);
+                this.listener.onDeviceExecutionFailed(this.getCurrentDevice());
                 Log.e(LOGGING_TAG, "Command '" + this.getCurrentCommand() + "' could not be executed after " + tries + " tries. Cancelling communication with device and retrying BLE connection.");
                 this.commandQueue.clear();
-                this.addLockCommand();
+                this.lockDevice();
                 this.commandTriesExceeded = true;
+                this.listener.onDeviceExecutionFailed(this.getCurrentDevice());
             } else {
+                this.listener.onDeviceDisconnected(false);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                 }
+                this.getCurrentCommand().nextTry();
             }
 
             this.connectAndExecuteCommand();
+
         }
 
     }
 
-    private void addLockCommand() {
-
-        this.commandQueue.offer(
-            new UARTCommand(
-                    "*pwd" + this.getCurrentBeacon().getSettings().getPin(),
-                    UARTResponseStrategy.SKIP_UNMATCHED
-            )
+    private void lockDevice() {
+        this.unlockDevice = false;
+        this.commandQueue.addFirst(
+                UARTCommandType.LOCK_CHECK_COMMAND.getCommand()
         );
+    }
+
+    public void start(BluetoothDevice device) {
+
+        this.commandTriesExceeded = false;
+        this.unlockDevice = true;
+        this.stopped = false;
+        this.currentDevice = device;
+        this.callbackHandler = new UARTCallbackHandler(this, this);
+        this.callbackHandler.setDevice(new UARTDevice(this.getCurrentDevice()));
+        this.commandQueue.clear();
+        this.successfulCommands = new UARTCommandList();
+
+        this.populateCommands();
+        this.connectAndExecuteCommand();
 
     }
 
-    private void onBluetoothDeviceFound(urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice bluetoothDevice) {
+    public void stop(boolean gracefulStop) {
 
-        // TODO only if current device is done
-        this.currentDevice = bluetoothDevice;
-        this.callbackHandler = null;
+        Log.i(LOGGING_TAG, "Stopping UARTManager (graceful? " + gracefulStop + ")...");
+        this.stopped = true;
+        this.callbackHandler.disable();
+        this.callbackHandler = new UARTCallbackHandler(this, this);
+        this.callbackHandler.setDevice(new UARTDevice(this.getCurrentDevice()));
+        this.listener.onDeviceCancel(this.getCurrentDevice());
 
-        Log.i(LOGGING_TAG, "Bluetooth device found: " + bluetoothDevice.getAddress());
-        this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_FOUND);
-        this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_INFO_FETCH);
+        if (gracefulStop) {
+            this.commandQueue.clear();
+            this.lockDevice();
+            this.connectAndExecuteCommand();
+        } else {
+            this.commandQueue.clear();
+            this.gatt.close();
+            this.currentDevice = null;
+            this.listener.onDeviceCancelled(null);
+        }
+
+        Log.i(LOGGING_TAG, "UARTManager successfully stoppped.");
 
     }
 
     private void onBluetoothError(Throwable t) {
         Log.e(LOGGING_TAG, "BLE device was disconnected before command, exception when finding devices: " + t.getMessage());
-        this.notify(PropertyChangeType.UART_MANAGER_STATUS, UARTManagerStatus.DEVICE_CONNECTION_FAILED);
+        this.listener.onDeviceDisconnected(false);
     }
 
     public void populateCommands() {
 
-        this.commandQueue.offer(LOCK_CHECK_COMMAND);
-        this.commandQueue.offer(TELEMETRICS_COMMAND);
-        this.commandQueue.offer(SETTINGS_COMMAND);
-        this.commandQueue.offer(LOGGER_COMMAND);
+        this.commandQueue.offer(UARTCommandType.LOCK_CHECK_COMMAND.getCommand());
+        this.commandQueue.offer(UARTCommandType.TELEMETRICS_COMMAND.getCommand());
+        this.commandQueue.offer(UARTCommandType.SETTINGS_COMMAND.getCommand());
+        this.commandQueue.offer(UARTCommandType.LOGGER_COMMAND.getCommand());
+        this.commandQueue.offer(UARTCommandType.LOCK_CHECK_COMMAND.getCommand());
 
-        this.addLockCommand();
+        this.totalCommandAmount = this.commandQueue.size();
 
     }
 
     public void connectAndExecuteCommand() {
 
-        if (this.callbackHandler == null) {
-            this.callbackHandler = new UARTCallbackHandler(this.context, this);
-            this.callbackHandler.getPropertyEmitter().listen(PropertyChangeType.GATT_CHARACTERISTIC, this);
-            this.callbackHandler.getPropertyEmitter().listen(PropertyChangeType.GATT_STATUS, this);
-        }
-        this.callbackHandler.setDevice(new UARTDevice(this.currentDevice));
+        Log.d(LOGGING_TAG, "Starting execution of command '" + this.getCurrentCommand() + "' on device '" + this.currentDevice + "'...");
 
-        this.gatt = this.getCurrentDevice().getDevice().connectGatt(this.context, false, this.callbackHandler);
-        boolean test = this.gatt.connect();
-        Log.i("", "");
+        this.listener.onDeviceCommandExecutionStart(
+                this.stopped,
+                this.totalCommandAmount,
+                this.totalCommandAmount - this.commandQueue.size(),
+                this.getCurrentCommand()
+        );
+
+        this.gatt = this.getCurrentDevice().getNativeDevice().connectGatt(this.context, false, this.callbackHandler);
+        this.gatt.connect();
 
     }
 
@@ -280,17 +273,23 @@ public class UARTManager extends PropertyChangeEmitter implements PropertyChange
     }
 
     public urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice getCurrentDevice() {
-        if (currentDevice == null) {
-            throw new RuntimeException(""); // TODO
-        }
         return currentDevice;
     }
 
-    public Beacon getCurrentBeacon() {
-        return currentBeacon;
+    public UARTCommandList getSuccessfulCommands() {
+        return successfulCommands;
     }
 
-    public void setCurrentBeacon(Beacon currentBeacon) {
-        this.currentBeacon = currentBeacon;
+    public interface OnUARTManagerStatusChange {
+        void onDeviceConnecting();
+        void onDeviceConnected();
+        void onDeviceDisconnected(boolean isSuccessful);
+        void onDeviceExecuted(BluetoothDevice device);
+        void onDeviceCancel(BluetoothDevice device);
+        void onDeviceCancelled(BluetoothDevice device);
+        void onDeviceExecutionFailed(BluetoothDevice device);
+        void onDeviceCommandExecutionStart(boolean cancelled, int totalCommandAmount, int currentCommandPosition, UARTCommand command);
+        void onDeviceCommandExecutionEnd(boolean cancelled, int totalCommandAmount, int currentCommandPosition, UARTCommand command);
     }
+
 }

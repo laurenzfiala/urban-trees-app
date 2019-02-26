@@ -3,29 +3,20 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.ParcelUuid;
 import android.util.Log;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.Set;
 
 import urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode;
-import urbantrees.spaklingscience.at.urbantrees.util.HasContext;
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeEmitter;
-import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
 
 /**
  * High level abstraction layer used to harden bluetooth
@@ -33,28 +24,16 @@ import urbantrees.spaklingscience.at.urbantrees.util.PropertyChangeType;
  * @author Laurenz Fiala
  * @since 2018/05/14
  */
-public class BluetoothCoordinator extends PropertyChangeEmitter {
+public class BluetoothCoordinator {
 
     /**
      * Logging tag for this class.
      */
     private static final String LOG_TAG = BluetoothCoordinator.class.getName();
 
-    /**
-     * The interval in milliseconds to scan for bluetooth beacons.
-     * See {@link #BT_SCAN_INTERVAL}.
-     *
-     * TODO implement logic
-     */
-    private static final int BT_SCAN_DURATION = 5000;
+    private Activity context;
 
-    /**
-     * The interval in milliseconds to start scanning for bluetooth beacons.
-     * See {@link #BT_SCAN_DURATION}.
-     *
-     * TODO implement logic
-     */
-    private static final int BT_SCAN_INTERVAL = 10000;
+    private OnBluetoothCoordinatorChange listener;
 
     public BluetoothAdapter bluetoothAdapter;
 
@@ -62,23 +41,17 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
 
     private AsyncTask scanTask;
 
-    private BluetoothDevice nearestDevice;
+    private Set<BluetoothDevice> devices = new LinkedHashSet<BluetoothDevice>();
 
-    public BluetoothCoordinator(Activity context) {
-        super(context);
-
+    public BluetoothCoordinator(Activity context, OnBluetoothCoordinatorChange listener) {
+        this.context = context;
+        this.listener = listener;
         this.getBluetoothAdapter();
-
     }
 
-    /**
-     * TODO
-     */
     private void getBluetoothAdapter() {
-
         final BluetoothManager bluetoothManager = (BluetoothManager) this.context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.bluetoothAdapter = bluetoothManager.getAdapter();
-
     }
 
     /**
@@ -124,6 +97,8 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
 
     public void startScan() {
 
+        this.listener.onScanStart();
+
         if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
 
             this.scanCallback = new ScanCallback() {
@@ -158,15 +133,21 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
 
     public void stopScan() {
 
-        if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
+        if (this.bluetoothAdapter.isEnabled()) {
 
-            this.bluetoothAdapter.getBluetoothLeScanner().stopScan((ScanCallback) this.scanCallback);
+            if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
 
-        } else {
+                this.bluetoothAdapter.getBluetoothLeScanner().stopScan((ScanCallback) this.scanCallback);
 
-            this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
+            } else {
+
+                this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
+
+            }
 
         }
+
+        this.devices.clear();
 
     }
 
@@ -178,24 +159,17 @@ public class BluetoothCoordinator extends PropertyChangeEmitter {
             return;
         }
 
-        this.stopScan();
-
-        if (this.nearestDevice == null || !bluetoothDevice.equals(this.nearestDevice)) {
-            this.nearestDevice = bluetoothDevice;
-            this.notify(PropertyChangeType.BLUETOOTH_DEVICE, bluetoothDevice);
-        } else if (bluetoothDevice.equals(this.nearestDevice)) {
-            this.nearestDevice.setRssi(rssi);
+        if (this.devices.add(bluetoothDevice)) {
+            this.listener.onNewBluetoothDeviceDiscovered(bluetoothDevice);
         }
+        this.listener.onBluetoothDeviceDiscovered(bluetoothDevice);
 
     }
 
-    /**
-     * Unset nearest device so the scan can
-     * continue searching for all devices including
-     * the failed one.
-     */
-    public void resetNearestDevice() {
-        this.nearestDevice = null;
+    public interface OnBluetoothCoordinatorChange {
+        void onScanStart();
+        void onBluetoothDeviceDiscovered(BluetoothDevice device);
+        void onNewBluetoothDeviceDiscovered(BluetoothDevice device);
     }
 
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Urban Trees</string>
+
     <string name="start_ble_search">Searching for beacons nearby...</string>
     <string name="found_device_page_loading">Loading beacon information...</string>
     <string name="intro_partners">In cooperation with</string>
@@ -11,7 +11,6 @@
     <string name="error_no_ble">Your device does not support Bluetooth.\nUnfortunately this app can\'t be used without Bluetooth.</string>
     <string name="error_jsonfetch">The webpage for the beacon could not be found.</string>
     <string name="error_no_internet">No internet connection is available.\nTurn on WIFI or data service to continue.</string>
-    <string name="retry">Retry</string>
     <string name="info_stop_scan_ble_off">Stopped scanning for beacons because Bluetooth has been turned off.</string>
     <string name="intro_subtitle">A Sparkling Science Project</string>
     <string name="intro_partners_addendum">and 12 schools from Austria, Germany and Hungary</string>
@@ -22,6 +21,21 @@
     <string name="ble_device_connection_failed">Could not connect to beacon</string>
     <string name="ble_uart_fetch_failed">Could not retrieve beacon information</string>
     <string name="ble_uart_fetched">Beacon data received!</string>
+
+    <string name="http_fetch_devices">Preparing beacon connection</string>
+    <string name="http_sending_data">Sending sensor data</string>
+    <string name="beacon_settings_fetch_failed">Failed to get beacon settings information.</string>
+    <string name="beacon_data_send_failed">Failed to send beacon data to server.</string>
+    <string name="beacon_list_fetch_failed">Failed to get list of beacons.</string>
+    <string name="beacon_data_get_failed">Failed get data from beacon, retrying in a few seconds...</string>
+
+    <!-- new strings -->
+
+    <!-- GENERAL -->
+    <string name="app_name">Urban Trees</string>
+    <string name="retry">Retry</string>
+
+    <!-- INTRO -->
     <string name="intro_main_text">Using this app you can collect and view tree data like air temperature and humidity. You can also view important info on the tree and more!</string>
     <string name="intro_nav_next">Next</string>
     <string name="intro_nav_previous">Previous</string>
@@ -31,10 +45,20 @@
     <string name="intro_done_title">We are all set!</string>
     <string name="intro_done_text">We wish you a lot of fun using the app.</string>
     <string name="intro_bluetooth_permission_request_button">Allow Bluetooth &amp; Location</string>
-    <string name="http_fetch_devices">Preparing beacon connection</string>
-    <string name="http_sending_data">Sending sensor data</string>
-    <string name="beacon_settings_fetch_failed">Failed to get beacon settings information.</string>
-    <string name="beacon_data_send_failed">Failed to send beacon data to server.</string>
-    <string name="beacon_list_fetch_failed">Failed to get list of beacons.</string>
-    <string name="beacon_data_get_failed">Failed get data from beacon, retrying in a few seconds...</string>
+
+    <!-- BEACON SEARCH DIALOG -->
+    <string name="search_devices">Searching Beacons...</string>
+    <string name="search_devices_more">Searching more Beacons...</string>
+    <string name="search_devices_prefix">Beacon</string>
+    <string name="comm_device_get_settings">Receiving connection parameters</string>
+    <string name="comm_device_connecting">Connecting to beacon</string>
+    <string name="comm_device_connected">Successfully connected to beacon</string>
+    <string name="comm_device_get_data">Receiving data from beacon</string>
+    <string name="comm_device_send_data">Sending beacon data</string>
+    <string name="comm_device_send_settings">Sending beacon state</string>
+    <string name="comm_device_cencelling">Cancelling beacon connection...</string>
+
+    <!-- WEBVIEW -->
+    <string name="webview_resource_failed">Could not reach the webserver to show the website. Please try again or close the app.</string>
+
 </resources>

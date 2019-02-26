@@ -18,8 +18,11 @@ import android.view.ViewTreeObserver;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.Map;
+
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivityDeprecated;
+import urbantrees.spaklingscience.at.urbantrees.http.HttpHeader;
 
 /**
  * Created by Laurenz Fiala on 20/09/2017.
@@ -74,6 +77,34 @@ public class Utils {
         } else {
             return true;
         }
+    }
+
+    public static HttpHeader[] mapToHttpHeaders(Map<String, String> map) {
+        HttpHeader[] headers = new HttpHeader[map.size()];
+        int i = 0;
+        for (Map.Entry<String, String> h : map.entrySet()) {
+            headers[i] = new HttpHeader(h.getKey(), h.getValue());
+            i++;
+        }
+        return headers;
+    }
+
+    public static String trimDoubleQuotes(String toBeTrimmed) {
+        if (toBeTrimmed == null) {
+            return null;
+        }
+
+        int start = 0;
+        int end = toBeTrimmed.length();
+        for (int i = 0; i < toBeTrimmed.length(); i++) {
+            if (toBeTrimmed.charAt(i) == '"' && start == i) {
+                start++;
+            }
+            if (toBeTrimmed.charAt(i) == '"' && end == toBeTrimmed.length() - i) {
+                end--;
+            }
+        }
+        return toBeTrimmed.substring(start, end);
     }
 
 }

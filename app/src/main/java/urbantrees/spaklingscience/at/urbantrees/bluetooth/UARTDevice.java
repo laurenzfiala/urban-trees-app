@@ -40,11 +40,11 @@ public class UARTDevice extends urbantrees.spaklingscience.at.urbantrees.bluetoo
     private boolean txNotificationEnabled;
 
     public UARTDevice(final urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice bluetoothDevice) {
-        super(bluetoothDevice.getDevice(), bluetoothDevice.getRssi());
+        super(bluetoothDevice.getNativeDevice(), bluetoothDevice.getRssi());
     }
 
     public UARTDevice(final urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice bluetoothDevice, final BluetoothGatt gatt) {
-        super(bluetoothDevice.getDevice(), bluetoothDevice.getRssi());
+        super(bluetoothDevice.getNativeDevice(), bluetoothDevice.getRssi());
         this.resolveCharacteristics(gatt);
     }
 

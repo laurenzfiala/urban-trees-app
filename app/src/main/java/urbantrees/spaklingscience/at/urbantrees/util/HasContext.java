@@ -1,7 +1,8 @@
 package urbantrees.spaklingscience.at.urbantrees.util;
 
 import android.app.Activity;
-import android.content.Context;
+
+import urbantrees.spaklingscience.at.urbantrees.activities.ApplicationProperties;
 
 /**
  * Abstract class used to add context activity to non-activity classes.
@@ -12,8 +13,11 @@ public abstract class HasContext {
 
     protected Activity context;
 
-    public HasContext(Activity context) {
+    protected ApplicationProperties props;
+
+    public HasContext(Activity context, ApplicationProperties props) {
         this.context = context;
+        this.props = props;
     }
 
 }

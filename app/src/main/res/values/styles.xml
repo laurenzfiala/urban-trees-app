@@ -10,4 +10,21 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="NoActionBar" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="progressBar" parent="@style/Theme.AppCompat">
+        <item name="colorAccent">@color/colorSecondary</item>
+        <item name="android:background">@color/colorSecondaryLight</item>
+        <item name="android:progressDrawable">@drawable/progress</item>
+        <item name="android:indeterminateDrawable">@drawable/progress</item>
+        <item name="android:indeterminateDuration">1</item>
+    </style>
+
 </resources>

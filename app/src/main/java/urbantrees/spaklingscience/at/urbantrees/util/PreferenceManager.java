@@ -26,7 +26,7 @@ public class PreferenceManager extends HasContext {
     private SharedPreferences.Editor prefsEditor;
 
     public PreferenceManager(Activity context) {
-        super(context);
+        super(context, null);
 
         this.prefs = context.getSharedPreferences(PREFS_KEY, 0);
         this.prefsEditor = this.prefs.edit();

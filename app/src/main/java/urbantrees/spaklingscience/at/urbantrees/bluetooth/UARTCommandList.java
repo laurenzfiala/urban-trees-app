@@ -10,6 +10,21 @@ import java.util.ArrayList;
  */
 public class UARTCommandList extends ArrayList<UARTCommand> {
 
+    /**
+     * Find the first {@link UARTCommand} matching the given command-type
+     * and return it.
+     * @param type {@link UARTCommandType} to find
+     * @return UARTCommand or null if no matching command was found
+     */
+    public UARTCommand find(UARTCommandType type) {
+        for (UARTCommand c : this) {
+            if (c.getType() == type) {
+                return c;
+            }
+        }
+        return null;
+    }
+
     public <T> UARTResponse<T> findResponse(UARTResponseType type) {
 
         for (UARTCommand command : this) {

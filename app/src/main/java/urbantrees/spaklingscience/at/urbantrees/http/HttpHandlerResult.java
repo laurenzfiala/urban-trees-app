@@ -27,4 +27,11 @@ public class HttpHandlerResult {
     public String getResponseValue() {
         return responseValue;
     }
+
+    public static void isSuccessfulElseThrow(HttpHandlerResult result) throws Exception {
+        if(!result.isSuccessful()) {
+            throw new Exception("Response status of http call was not 200.");
+        }
+    }
+
 }

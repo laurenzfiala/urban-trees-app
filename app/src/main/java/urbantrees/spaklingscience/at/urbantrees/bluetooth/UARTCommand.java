@@ -17,6 +17,8 @@ public class UARTCommand {
 
     private static final String LOGGING_TAG = UARTCommand.class.getName();
 
+    private UARTCommandType type;
+
     /**
      * Encoding currently used for all UART communication.
      */
@@ -53,7 +55,8 @@ public class UARTCommand {
 
     private List<UARTResponse> responses = new ArrayList<UARTResponse>();
 
-    public UARTCommand(final String inputCommand, final UARTResponseStrategy responseStrategy, final UARTResponseType... responseTypes) {
+    public UARTCommand(final UARTCommandType type, final String inputCommand, final UARTResponseStrategy responseStrategy, final UARTResponseType... responseTypes) {
+        this.type = type;
         this.inputCommand = inputCommand;
         this.responseStrategy = responseStrategy;
         this.responseTypes = responseTypes;
@@ -140,6 +143,21 @@ public class UARTCommand {
     }
 
     /**
+     * Find the given {@link UARTResponse} by its type.
+     * If the given type is not found, return null.
+     * @param typeToFind {@link UARTResponseType} of the {@link UARTResponse} to find
+     * @return found {@link UARTResponse} or null
+     */
+    public <T> UARTResponse<T> findResponse(UARTResponseType typeToFind) {
+        for (UARTResponse r : this.getResponses()) {
+            if (r.getType() == typeToFind) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    /**
      * TODO
      * @return
      */
@@ -152,9 +170,7 @@ public class UARTCommand {
      * @return
      */
     public int getProgress() {
-
         return this.responseTypeIndex / this.responseTypes.length * 100;
-
     }
 
     @Override
@@ -168,5 +184,9 @@ public class UARTCommand {
 
     public void nextTry() {
         this.tries++;
+    }
+
+    public UARTCommandType getType() {
+        return type;
     }
 }
