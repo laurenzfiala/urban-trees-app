@@ -35,6 +35,7 @@ import urbantrees.spaklingscience.at.urbantrees.fragments.DeviceSelectFragment;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpManager;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
 import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
+import urbantrees.spaklingscience.at.urbantrees.util.PreferenceManager;
 import urbantrees.spaklingscience.at.urbantrees.util.Utils;
 
 import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.FILECHOOSER_RESULT_CODE;
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity
     private UARTManager uartManager;
     private HttpManager httpManager;
     private Properties props;
+    private PreferenceManager prefManager;
 
     // ----- WEBVIEW -----
     private CustomWebViewClient webViewClient;
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         this.loadProperties();
+        this.loadPreferences();
         this.initWebView();
 
         this.httpManager = new HttpManager(this, this);
@@ -100,17 +103,15 @@ public class MainActivity extends AppCompatActivity
         this.webView = (WebView) findViewById(R.id.web_view);
         this.webView.getSettings().setJavaScriptEnabled(true);
         this.webView.getSettings().setDomStorageEnabled(true);
-        this.webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+        this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         this.webView.setWebViewClient(this.webViewClient);
         this.webView.setWebChromeClient(this.webChromeClient);
-        this.webView.clearFormData();
         //WebView.setWebContentsDebuggingEnabled(true); // TODO remove
-        //this.webView.clearCache(true); // TODO remove
 
     }
 
     public void loadInitialPage() {
-        this.webView.loadUrl(this.props.getProperty("initial.load.address"));
+        this.webView.loadUrl(this.getProperty("initial.load.address"));
     }
 
     /**
@@ -126,11 +127,18 @@ public class MainActivity extends AppCompatActivity
         }
 
         try {
-            props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
+            this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
         } catch (IOException e) {
             Log.e(LOGGING_TAG, "Could not load config: " + e.getMessage(), e);
         }
 
+    }
+
+    /**
+     * Load device stored preferences.
+     */
+    private void loadPreferences() {
+        this.prefManager = new PreferenceManager(this);
     }
 
     @Override
@@ -463,6 +471,12 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean getBooleanProperty(String propertyKey, Object ...replacements) {
+        String property = this.getProperty(propertyKey, replacements);
+        return "true".equals(property);
+    }
+
+    @Override
     public HttpManager getHttpManager() {
         return this.httpManager;
     }
@@ -485,7 +499,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showSearchControls() {
-        this.fab.setVisibility(View.VISIBLE);
+        if (this.getBooleanProperty("fab.show") && this.prefManager.isTreeDataCollect()) {
+            this.fab.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

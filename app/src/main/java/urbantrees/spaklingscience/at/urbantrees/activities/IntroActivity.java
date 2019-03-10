@@ -136,6 +136,7 @@ public class IntroActivity extends FragmentActivity {
     }
 
     public void setTreeDataCollectEnabled(boolean collect) {
+        this.prefManager.setTreeDataCollect(collect);
         this.isTreeDataCollectEnabled = collect;
         updateNavigation(0);
         myViewPagerAdapter.notifyChangeInPosition(1);
