@@ -14,7 +14,7 @@ import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivity;
 
 public class IntroMainFragment extends IntroGenericFragment {
 
-    private boolean isTreeDataCollectEnabledPreset = true;
+    private boolean isTreeDataCollectEnabledPreset;
 
     public IntroMainFragment() {
         super();

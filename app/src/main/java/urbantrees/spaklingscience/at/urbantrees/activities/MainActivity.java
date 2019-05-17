@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -135,7 +138,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Load device stored preferences.
+     * Load device stored preferences.onWebviewError
      */
     private void loadPreferences() {
         this.prefManager = new PreferenceManager(this);
@@ -483,13 +486,15 @@ public class MainActivity extends AppCompatActivity
 
     // ----- MainActivityInterface -----
     @Override
-    public void onWebviewError() {
-        Dialogs.criticalDialog(this, R.string.webview_resource_failed, R.string.retry, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                MainActivity.this.loadInitialPage();
-            }
-        });
+    public void onWebviewError(WebResourceRequest request, WebResourceError error) {
+        if (Build.VERSION.SDK_INT < 21 || request.isForMainFrame()) {
+            Dialogs.criticalDialog(this, R.string.webview_resource_failed, R.string.retry, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    MainActivity.this.loadInitialPage();
+                }
+            });
+        }
     }
 
     @Override

@@ -1,6 +1,8 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 import android.content.Intent;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 
 /**
  * Interface for the {@link urbantrees.spaklingscience.at.urbantrees.activities.MainActivity}
@@ -10,7 +12,7 @@ import android.content.Intent;
 public interface MainActivityInterface {
 
     void loadInitialPage();
-    void onWebviewError();
+    void onWebviewError(WebResourceRequest request, WebResourceError error);
     void onWebviewPageFinished();
     void showSearchControls();
     void onWebviewResouceLoaded();

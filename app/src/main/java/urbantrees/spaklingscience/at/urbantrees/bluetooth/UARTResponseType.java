@@ -369,7 +369,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
             int offsetToLastLog = (int) (cal.getTimeInMillis() - refDate) % (logFreq * 1000);
             cal.add(Calendar.MILLISECOND, -offsetToLastLog);
 
-            for (int i = vals[0].length - 1; i > 0; i--) {
+            for (int i = vals[0].length - 1; i >= 0; i--) {
 
                 if (vals[0][i] == null || vals[1][i] == null || vals[2][i] == null) {
                     continue;

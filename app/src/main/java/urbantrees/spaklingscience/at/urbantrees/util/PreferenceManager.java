@@ -52,7 +52,7 @@ public class PreferenceManager extends HasContext {
     }
 
     public boolean isTreeDataCollect() {
-        return this.prefs.getBoolean(COLLECT_DATA_PREF_KEY, false);
+        return this.prefs.getBoolean(COLLECT_DATA_PREF_KEY, true);
     }
 
 }

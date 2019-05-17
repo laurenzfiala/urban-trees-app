@@ -3,13 +3,13 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
     }
-    compileSdkVersion 27
+    compileSdkVersion 28
     defaultConfig {
         applicationId "urbantrees.spaklingscience.at.urbantrees"
         minSdkVersion 19
-        targetSdkVersion 27
-        versionCode 17
-        versionName "0.1.2"
+        targetSdkVersion 28
+        versionCode 20
+        versionName "0.1.4_internal"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

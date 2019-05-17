@@ -27,9 +27,9 @@ public class CustomWebViewClient extends WebViewClient {
     }
 
     @Override
-    public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-        super.onReceivedHttpError(view, request, errorResponse);
-        this.mainActivity.onWebviewError();
+    public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+        super.onReceivedError(view, request, error);
+        this.mainActivity.onWebviewError(request, error);
     }
 
     @Override
