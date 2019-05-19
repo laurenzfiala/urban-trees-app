@@ -33,18 +33,9 @@ public class HttpHandler extends AsyncTask<HttpHandlerParams, Void, HttpHandlerR
     private static final String LOGGING_TAG = HttpHandler.class.getName();
 
     /**
-     * The reference to the calling activity for UI tasks and response.
-     */
-    private Activity activity;
-
-    /**
      * Key is device address, value is mapped URL to display.
      */
     public Map<String, String> deviceUrlMapping = new HashMap<>();
-
-    public HttpHandler(Activity activity) {
-        this.activity = activity;
-    }
 
     @Override
     protected HttpHandlerResult doInBackground(HttpHandlerParams... params) {

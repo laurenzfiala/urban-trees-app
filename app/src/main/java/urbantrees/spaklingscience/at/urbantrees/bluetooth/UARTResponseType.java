@@ -15,7 +15,10 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import urbantrees.spaklingscience.at.urbantrees.entities.BeaconStatus;
+import urbantrees.spaklingscience.at.urbantrees.util.BeaconLogger;
 import urbantrees.spaklingscience.at.urbantrees.util.ByteUtils;
+import urbantrees.spaklingscience.at.urbantrees.util.Utils;
 
 /**
  * TODO
@@ -159,7 +162,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
             stringValue = this.findFirstGroup("-> (.*)", stringValue);
 
             if ("00:00:00:00:00".equals(stringValue)) {
-                Log.w(this.getClass().getName(), "Reference Date is not set.");
+                Log.d(this.getClass().getName(), "Reference Date is not set.");
                 return new UARTResponse<Date>(this, null);
             }
 
@@ -323,11 +326,20 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         public UARTResponse<UARTLogEntry[]> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
             Integer numLogs = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.CURRENT_NUM_LOGS).getValue();
-            Date refDate = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE).getValue();
             Integer logFreq = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue();
+            UARTResponse<Date> refDateResponse = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE);
 
-            if (numLogs == null || refDate == null || logFreq == null) {
-                throw new RuntimeException("The response type '" + this + "' needs the log amount, reference date and log frequency to be retrieved beforehand.");
+            Date refDate = refDateResponse.getValue();
+            if (refDate == null) { // fallback to ref date from adv pkg (bug in blue maestro beacons)
+                refDate = Utils.geAdvPkgRefDate(pkg.getAssocDevice());
+                refDateResponse.setValue(refDate); // update value for settings transfer
+            }
+            if (refDate == null) {
+                BeaconLogger.error(pkg.getAssocDevice(), "Reference date is not set, cancelling command execution.");
+                throw new RuntimeException("Reference date must be set before command '" + this + "' can be executed.");
+            }
+            if (numLogs == null || logFreq == null) {
+                throw new RuntimeException("The response type '" + this + "' needs the log amount and log frequency to be retrieved beforehand.");
             }
 
             final byte[][] chars = pkg.getCharacteristics();

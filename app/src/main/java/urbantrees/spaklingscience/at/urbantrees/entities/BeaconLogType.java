@@ -1,13 +1,14 @@
 package urbantrees.spaklingscience.at.urbantrees.entities;
 
 /**
- * Severity of a beacon log entry.
+ * Type of a beacon log.
+ * Only "ANDR_APP" is used by this app.
  * 
  * @author Laurenz Fiala
  * @since 2018/06/06
  */
 public enum BeaconLogType {
-	
-	SYSTEM
+
+    ANDR_APP
 
 }

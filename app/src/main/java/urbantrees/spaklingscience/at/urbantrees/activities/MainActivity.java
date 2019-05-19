@@ -23,6 +23,8 @@ import java.util.Properties;
 
 import urbantrees.spaklingscience.at.urbantrees.BuildConfig;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommandType;
+import urbantrees.spaklingscience.at.urbantrees.entities.BeaconLog;
+import urbantrees.spaklingscience.at.urbantrees.entities.BeaconStatus;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebChromeClient;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebViewClient;
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -37,6 +39,7 @@ import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
 import urbantrees.spaklingscience.at.urbantrees.fragments.DeviceSelectFragment;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpManager;
+import urbantrees.spaklingscience.at.urbantrees.util.BeaconLogger;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
 import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
 import urbantrees.spaklingscience.at.urbantrees.util.PreferenceManager;
@@ -260,7 +263,7 @@ public class MainActivity extends AppCompatActivity
         MainActivity.this.fab.setVisibility(View.GONE);
 
         if (this.uartManager == null) {
-            this.uartManager = new UARTManager(this, this.bluetoothCoordinator, this);
+            this.uartManager = new UARTManager(this, this, this.bluetoothCoordinator, this);
         }
 
         this.statusFragment = StatusBottomSheetFragment.newInstance();
@@ -268,6 +271,7 @@ public class MainActivity extends AppCompatActivity
                 .add(R.id.status_container, this.statusFragment, StatusBottomSheetFragment.TAG).commit();
         this.statusFragment.setStatus(R.string.comm_device_get_settings);
         this.statusFragment.setProgress(10);
+        BeaconLogger.debug(device, "Device was selected. Receiving connection parameters.");
 
         this.httpManager.getBeaconSettings(device.getBeacon().getId(), new Callback<BeaconSettings>() {
             @Override
@@ -288,6 +292,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStatusCancelled() {
         this.uartManager.stop(true);
+        BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Cancelling beacon connection...");
+        BeaconLogger.send(this);
     }
 
     @Override
@@ -312,6 +318,7 @@ public class MainActivity extends AppCompatActivity
 
         if (device.getBeacon() != null) {
             this.deviceSelectFragment.addDevice(device);
+            BeaconLogger.trace(device, "Discovered beacon matching filter.");
         }
 
     }
@@ -320,12 +327,14 @@ public class MainActivity extends AppCompatActivity
     public void onDeviceConnecting() {
         this.statusFragment.setStatus(R.string.comm_device_connecting);
         this.statusFragment.setProgress(20);
+        BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Connecting to beacon.");
     }
 
     @Override
     public void onDeviceConnected() {
         this.statusFragment.setStatus(R.string.comm_device_connected);
         this.statusFragment.setProgress(25);
+        BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Successfully connected to beacon.");
     }
 
     @Override
@@ -339,6 +348,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         this.statusFragment.setStatus(R.string.comm_device_get_data);
+        BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Receiving data from beacon. Executing command: " + command);
     }
 
     @Override
@@ -350,6 +360,7 @@ public class MainActivity extends AppCompatActivity
         this.statusFragment.setProgress(
                 (int) (this.statusFragment.getProgress() + ((float) commandExecProgressAmount / (float) totalCommandAmount))
         );
+        BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Received data from beacon. Executed command: " + command);
     }
 
     @Override
@@ -357,6 +368,7 @@ public class MainActivity extends AppCompatActivity
 
         this.statusFragment.setProgress(90);
         this.statusFragment.setStatus(R.string.comm_device_send_data);
+        BeaconLogger.trace(device, "Data successfully received. Sending to backend.");
 
         try {
             UARTLogEntry[] logs = this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue();
@@ -374,6 +386,7 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void call(Void v) {
                             Log.i(LOGGING_TAG, "Successfully sent beacon settings to server");
+                            BeaconLogger.debug(device, "Data successfully sent to backend.");
 
                             Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
                             Runnable r = new Runnable() {
@@ -397,6 +410,7 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void error(Throwable t) {
                             Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
+                            BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
                             Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
                             Runnable r = new Runnable() {
                                 @Override
@@ -414,6 +428,7 @@ public class MainActivity extends AppCompatActivity
                 public void error(Throwable t) {
                     Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
                     Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
+                    BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
                 }
             });
         } catch (Throwable t) {
@@ -446,9 +461,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDeviceExecutionFailed(final BluetoothDevice device) {
 
-        Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
+        BeaconLogger.send(this);
+
         this.uartManager.stop(false);
 
+        Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
         Runnable redirectRunnable = new Runnable() {
             @Override
             public void run() {
@@ -466,8 +483,9 @@ public class MainActivity extends AppCompatActivity
 
     private void redirectAfterBeacon(final BluetoothDevice device) {
 
-        Handler mainHandler = new Handler(this.getMainLooper());
+        BeaconLogger.send(this);
 
+        Handler mainHandler = new Handler(this.getMainLooper());
         Runnable redirectRunnable = new Runnable() {
             @Override
             public void run() {

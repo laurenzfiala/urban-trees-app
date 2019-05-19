@@ -39,11 +39,11 @@ public class HttpManager extends HasContext {
     private static final String JWT_AUTH_HEADER_KEY = "Authorization";
     private static final String APIKEY_AUTH_HEADER_KEY = "x-api-key";
 
-    private Map<String, String> headers = new HashMap<>();
+    private static Map<String, String> headers = new HashMap<>();
 
     private Beacon[] beacons;
 
-    public HttpManager(Activity context , ApplicationProperties props) {
+    public HttpManager(Activity context, ApplicationProperties props) {
         super(context, props);
     }
 
@@ -53,7 +53,7 @@ public class HttpManager extends HasContext {
      */
     public void fetchDeviceList(Callback<Void> callbackFn) {
 
-        HttpHandler f = new HttpHandler(this.context);
+        HttpHandler f = new HttpHandler();
 
         try {
 
@@ -61,7 +61,7 @@ public class HttpManager extends HasContext {
                     new HttpHandlerParams(
                             this.props.getProperty("beacon.list.url"),
                             HttpHandlerMethod.GET,
-                            Utils.mapToHttpHeaders(this.headers),
+                            getHttpHeaders(),
                             null
                     )
             );
@@ -94,7 +94,7 @@ public class HttpManager extends HasContext {
      */
     public void getBeaconSettings(int beaconId, Callback<BeaconSettings> callbackFn) {
 
-        HttpHandler f = new HttpHandler(this.context);
+        HttpHandler f = new HttpHandler();
 
         try {
 
@@ -102,7 +102,7 @@ public class HttpManager extends HasContext {
                     new HttpHandlerParams(
                             this.props.getProperty("beacon.settings.url", beaconId),
                             HttpHandlerMethod.GET,
-                            Utils.mapToHttpHeaders(this.headers),
+                            getHttpHeaders(),
                             null
                     )
             );
@@ -158,17 +158,17 @@ public class HttpManager extends HasContext {
         try {
             DateFormat df = new SimpleDateFormat(this.props.getProperty("date.format"));
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
-            String test = new ObjectMapper()
+            String payload = new ObjectMapper()
                     .setDateFormat(df)
                     .writeValueAsString(datasets);
 
-            HttpHandler f = new HttpHandler(this.context);
+            HttpHandler f = new HttpHandler();
             f.execute(
                     new HttpHandlerParams(
                             this.props.getProperty("beacon.datatransfer.url", beacon.getId()),
                             HttpHandlerMethod.PUT,
                             headers,
-                            test
+                            payload
                     )
             );
             HttpHandlerResult res = f.get();
@@ -182,7 +182,6 @@ public class HttpManager extends HasContext {
 
     }
 
-    // TODO add to flow
     public void sendBeaconSettings(Beacon beacon, UARTCommand settingsCmd, UARTCommand telemetricsCmd, Callback callback) {
 
         if (settingsCmd.getResponses().size() == 0) {
@@ -208,7 +207,7 @@ public class HttpManager extends HasContext {
         newSettings.setPhysicalButtonEnabled(settingsCmd.<Boolean>findResponse(UARTResponseType.PHYSICAL_BUTTON_ENABLED).getValue());
         newSettings.setTemperatureCalibration(settingsCmd.<Double>findResponse(UARTResponseType.TEMPERATURE_CALIBRATION).getValue());
         newSettings.setHumidityCalibration(settingsCmd.<Integer>findResponse(UARTResponseType.HUMIDITY_CALIBRATION).getValue());
-        newSettings.setLoggingIntervalMin(telemetricsCmd.<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue());
+        newSettings.setLoggingIntervalSec(telemetricsCmd.<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue());
         newSettings.setSensorIntervalSec(telemetricsCmd.<Integer>findResponse(UARTResponseType.SENSOR_FREQUENCY).getValue());
         newSettings.setAdvertisingFrequencyMs(0); // TODO
         newSettings.setPin(beacon.getSettings().getPin());
@@ -221,7 +220,7 @@ public class HttpManager extends HasContext {
                     .setDateFormat(df)
                     .writeValueAsString(newSettings); // TODO move to config
 
-            HttpHandler f = new HttpHandler(this.context);
+            HttpHandler f = new HttpHandler();
             f.execute(
                     new HttpHandlerParams(
                             this.props.getProperty("beacon.settings.url", beacon.getId()),
@@ -244,7 +243,7 @@ public class HttpManager extends HasContext {
         if (token == null) {
             return;
         }
-        this.headers.put(JWT_AUTH_HEADER_KEY, token);
+        headers.put(JWT_AUTH_HEADER_KEY, token);
     }
 
     public void unsetJWTToken() {
@@ -252,15 +251,19 @@ public class HttpManager extends HasContext {
     }
 
     public boolean isJWTTokenAuthenticated() {
-        return this.headers.containsKey(JWT_AUTH_HEADER_KEY);
+        return headers.containsKey(JWT_AUTH_HEADER_KEY);
     }
 
     public void setApiKeyToken(String token) {
-        this.headers.put(APIKEY_AUTH_HEADER_KEY, token);
+        headers.put(APIKEY_AUTH_HEADER_KEY, token);
     }
 
     public Beacon[] getBeacons() {
         return beacons;
+    }
+
+    public static HttpHeader[] getHttpHeaders() {
+        return Utils.mapToHttpHeaders(headers);
     }
 
 }

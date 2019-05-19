@@ -12,16 +12,23 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivityDeprecated;
+import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpHeader;
 
 /**
@@ -105,6 +112,33 @@ public class Utils {
             }
         }
         return toBeTrimmed.substring(start, end);
+    }
+
+    /**
+     * Parses the reference date from the given devices' advertisement package.
+     * @param device bluetooth device
+     * @return the set reference date or null if the date is unset
+     * @throws RuntimeException if adv pkg is null
+     */
+    public static Date geAdvPkgRefDate(final BluetoothDevice device) {
+
+        if (device.getAdvertisementPkg() == null) {
+            throw new RuntimeException("Advertisement pkg not set in BluetoothDevice " + device);
+        }
+
+        long rawDateNum = ByteUtils.octalToDecimal(Arrays.copyOfRange(device.getAdvertisementPkg(), 56, 60));
+        if (rawDateNum == 0) {
+            return null;
+        }
+
+        String rawDate = String.valueOf(rawDateNum);
+        DateFormat df = new SimpleDateFormat("yyMMddhhmm");
+        try {
+            return df.parse(rawDate);
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse ref date from advertisement pkg.");
+        }
+
     }
 
 }

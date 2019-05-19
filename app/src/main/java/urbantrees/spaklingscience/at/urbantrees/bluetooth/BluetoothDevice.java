@@ -13,18 +13,18 @@ public class BluetoothDevice {
 
     private int rssi;
 
+    private byte[] advertisementPkg;
+
     private Beacon beacon;
 
     private final android.bluetooth.BluetoothDevice nativeDevice;
 
-    public BluetoothDevice(final android.bluetooth.BluetoothDevice nativeDevice, final int rssi) {
-        this(null, nativeDevice);
-        this.rssi = rssi;
-    }
-
-    public BluetoothDevice(final Beacon beacon, final android.bluetooth.BluetoothDevice nativeDevice) {
-        this.beacon = beacon;
+    public BluetoothDevice(final android.bluetooth.BluetoothDevice nativeDevice,
+                           final int rssi,
+                           final byte[] advertisementPkg) {
         this.nativeDevice = nativeDevice;
+        this.rssi = rssi;
+        this.advertisementPkg = advertisementPkg;
     }
 
     public String getAddress() {
@@ -49,6 +49,14 @@ public class BluetoothDevice {
 
     public void setBeacon(Beacon beacon) {
         this.beacon = beacon;
+    }
+
+    public byte[] getAdvertisementPkg() {
+        return advertisementPkg;
+    }
+
+    public void setAdvertisementPkg(byte[] advertisementPkg) {
+        this.advertisementPkg = advertisementPkg;
     }
 
     @Override

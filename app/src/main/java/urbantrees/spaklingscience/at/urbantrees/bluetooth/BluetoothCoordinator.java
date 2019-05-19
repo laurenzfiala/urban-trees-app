@@ -12,11 +12,17 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Log;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode;
+import urbantrees.spaklingscience.at.urbantrees.util.ByteUtils;
 
 /**
  * High level abstraction layer used to harden bluetooth
@@ -99,61 +105,30 @@ public class BluetoothCoordinator {
 
         this.listener.onScanStart();
 
-        if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
+        this.scanCallback = new BluetoothAdapter.LeScanCallback() {
 
-            this.scanCallback = new ScanCallback() {
-
-                @Override
-                @TargetApi(21)
-                public void onScanResult(int callbackType, ScanResult result) {
-
-                    BluetoothCoordinator.this.onDeviceFound(result.getDevice(), result.getRssi());
-
-                    super.onScanResult(callbackType, result);
-                }
-            };
-            this.bluetoothAdapter.getBluetoothLeScanner().startScan((ScanCallback) this.scanCallback);
-
-        } else {
-
-            this.scanCallback = new BluetoothAdapter.LeScanCallback() {
-
-                @Override
-                public void onLeScan(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
-
-                    BluetoothCoordinator.this.onDeviceFound(device, rssi);
-
-                }
-            };
-            this.bluetoothAdapter.startLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
-
-        }
+            @Override
+            public void onLeScan(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
+                BluetoothCoordinator.this.onDeviceFound(device, rssi, scanRecord);
+            }
+        };
+        this.bluetoothAdapter.startLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
 
     }
 
     public void stopScan() {
 
         if (this.bluetoothAdapter.isEnabled()) {
-
-            if (Build.VERSION.SDK_INT >= 21) { // android lollipop and higher
-
-                this.bluetoothAdapter.getBluetoothLeScanner().stopScan((ScanCallback) this.scanCallback);
-
-            } else {
-
-                this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
-
-            }
-
+            this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
         }
 
         this.devices.clear();
 
     }
 
-    private void onDeviceFound(android.bluetooth.BluetoothDevice device, int rssi) {
+    private void onDeviceFound(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
 
-        final BluetoothDevice bluetoothDevice = new BluetoothDevice(device, rssi);
+        final BluetoothDevice bluetoothDevice = new BluetoothDevice(device, rssi, scanRecord);
 
         if (!this.filterAdresses.contains(bluetoothDevice.getAddress())) {
             return;

@@ -70,12 +70,15 @@ public class UARTCommand {
      * Add a response to this command execution.
      * Depending on the {@link UARTResponseStrategy}, this may return
      * a boolean value indicating successful adherence to the strategy's policies.
+     * @param device bluetooth device from which the response was received
      * @param characteristic received from the device after command was written to it
      * @param cmds all previous commands
      * @return true if the given response adheres to the set {@link UARTResponseStrategy}; false if not
      * @throws Throwable if the extraction of the needed information failed unexpectedly
      */
-    public boolean addResponse(final BluetoothGattCharacteristic characteristic, final UARTCommandList cmds) throws Throwable {
+    public boolean addResponse(final BluetoothDevice device,
+                               final BluetoothGattCharacteristic characteristic,
+                               final UARTCommandList cmds) throws Throwable {
 
         this.totalResponseAmount++;
         if (this.responseTypes.length <= this.responseTypeIndex) {
@@ -98,7 +101,8 @@ public class UARTCommand {
                 this.totalResponseAmount,
                 this.responses.size(),
                 this.collatedCharacteristics.toArray(new byte[this.collatedCharacteristics.size()][]),
-                cmds
+                cmds,
+                device
         );
         final int responseAmount = this.getCurrentResponseType().getResponseAmount(pkg);
 

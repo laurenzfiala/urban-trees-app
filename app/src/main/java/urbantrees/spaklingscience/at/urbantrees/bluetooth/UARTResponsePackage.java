@@ -16,16 +16,20 @@ public class UARTResponsePackage {
 
     private UARTCommandList previousCommands;
 
+    private BluetoothDevice assocDevice;
+
     public UARTResponsePackage(
             final int totalResponseAmount,
             final int matchedResponseAmount,
             final byte[][] characteristics,
-            final UARTCommandList previousCommands
+            final UARTCommandList previousCommands,
+            final BluetoothDevice assocDevice
     ) {
         this.totalResponseAmount = totalResponseAmount;
         this.matchedResponseAmount = matchedResponseAmount;
         this.characteristics = characteristics;
         this.previousCommands = previousCommands;
+        this.assocDevice = assocDevice;
     }
 
     public int getTotalResponseAmount() {
@@ -54,5 +58,9 @@ public class UARTResponsePackage {
 
     public void setPreviousCommands(UARTCommandList previousCommands) {
         this.previousCommands = previousCommands;
+    }
+
+    public BluetoothDevice getAssocDevice() {
+        return assocDevice;
     }
 }
