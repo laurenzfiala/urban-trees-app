@@ -159,8 +159,8 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
             stringValue = this.findFirstGroup("-> (.*)", stringValue);
 
             if ("00:00:00:00:00".equals(stringValue)) {
-                Log.w(this.getClass().getName(), "Reference Date is not set, using current date.");
-                return new UARTResponse<Date>(this, new Date());
+                Log.w(this.getClass().getName(), "Reference Date is not set.");
+                return new UARTResponse<Date>(this, null);
             }
 
             DateFormat dateFormat = new SimpleDateFormat("yy:MM:dd:HH:mm");
@@ -304,12 +304,15 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                 return 0;
             }
 
+            final byte[] trimmedLastChar = ByteUtils.trim(pkg.getCharacteristic(pkg.getCharacteristics().length - 1));
+            int fromIndex = trimmedLastChar.length-2;
+            if (trimmedLastChar.length % 2 != 0) { // steps of 2, if uneven only check last byte
+                fromIndex++;
+            }
+            final byte[] val = Arrays.copyOfRange(trimmedLastChar, fromIndex, trimmedLastChar.length);
+            final String stringValue = ByteUtils.toString(val, UARTCommand.ENCODING);
 
-            final byte[] lastChar = pkg.getCharacteristic(pkg.getCharacteristics().length - 1);
-            final byte[] trimmedVal = ByteUtils.trim(lastChar);
-            final String stringValue = ByteUtils.toString(trimmedVal, UARTCommand.ENCODING);
-
-            if (stringValue.endsWith(".")) {
+            if (stringValue.equals(".")) {
                 return 1;
             }
             return -1;
@@ -320,17 +323,15 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         public UARTResponse<UARTLogEntry[]> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
             Integer numLogs = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.CURRENT_NUM_LOGS).getValue();
-            Long refDate = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE).getValue().getTime();
+            Date refDate = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE).getValue();
             Integer logFreq = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue();
 
             if (numLogs == null || refDate == null || logFreq == null) {
                 throw new RuntimeException("The response type '" + this + "' needs the log amount, reference date and log frequency to be retrieved beforehand.");
             }
 
-            List<UARTLogEntry> entries = new ArrayList<UARTLogEntry>();
-
             final byte[][] chars = pkg.getCharacteristics();
-            Double[][] vals = new Double[3][numLogs]; // log amount read-out may be outdated, so add buffer
+            Double[][] vals = new Double[3][Math.min(numLogs+5, 6000)]; // numLogs+5 because it may be outdated
             int valIndex = 0, valMetricIndex = 0;
 
             charLoop:
@@ -350,7 +351,6 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                     final double val = (double) ByteUtils.octalToDecimal(Arrays.copyOfRange(chars[i], j, j+2)) / 10d;
                     try {
                         vals[valIndex][valMetricIndex] = val;
-
                     } catch (ArrayIndexOutOfBoundsException e) {
                         Log.e("", "");
                     }
@@ -360,16 +360,13 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
 
             }
 
-            // TODO
-            // make arrays lists
-            // dont use log amount for array size
-            // dont use rest of interval, but use ref date + log amount * interval
+            long logDate = refDate.getTime();
+            if (numLogs > 6000) {
+                logDate += (logFreq * 1000) * (numLogs % 6000);
+            }
 
-            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-            int offsetToLastLog = (int) (cal.getTimeInMillis() - refDate) % (logFreq * 1000);
-            cal.add(Calendar.MILLISECOND, -offsetToLastLog);
-
-            for (int i = vals[0].length - 1; i >= 0; i--) {
+            List<UARTLogEntry> entries = new ArrayList<UARTLogEntry>();
+            for (int i = 0; i < vals[0].length; i++) {
 
                 if (vals[0][i] == null || vals[1][i] == null || vals[2][i] == null) {
                     continue;
@@ -377,13 +374,13 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
 
                 entries.add(
                         new UARTLogEntry(
-                                cal.getTime(),
+                                new Date(logDate), // TODO check
                                 vals[0][i],
                                 vals[1][i],
                                 vals[2][i]
                         )
                 );
-                cal.add(Calendar.SECOND, -logFreq);
+                logDate += (logFreq * 1000);
 
             }
 

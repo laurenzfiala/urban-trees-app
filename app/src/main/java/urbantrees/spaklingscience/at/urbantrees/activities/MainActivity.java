@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -374,6 +375,20 @@ public class MainActivity extends AppCompatActivity
                         public void call(Void v) {
                             Log.i(LOGGING_TAG, "Successfully sent beacon settings to server");
 
+                            Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
+                            Runnable r = new Runnable() {
+                                @Override
+                                public void run() {
+                                    FragmentManager fm = getSupportFragmentManager();
+                                    if (!fm.isDestroyed() && !fm.isStateSaved()) {
+                                        getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                                    }
+                                    redirectAfterBeacon(device);
+                                }
+                            };
+                            h.post(r);
+
+
                             getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
                             redirectAfterBeacon(device);
 
@@ -382,7 +397,14 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void error(Throwable t) {
                             Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
-                            Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
+                            Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
+                            Runnable r = new Runnable() {
+                                @Override
+                                public void run() {
+                                    Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
+                                }
+                            };
+                            h.post(r);
                         }
                     });
 
@@ -425,6 +447,7 @@ public class MainActivity extends AppCompatActivity
     public void onDeviceExecutionFailed(final BluetoothDevice device) {
 
         Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
+        this.uartManager.stop(false);
 
         Runnable redirectRunnable = new Runnable() {
             @Override
@@ -433,7 +456,7 @@ public class MainActivity extends AppCompatActivity
                 MainActivity.this.webView.loadUrl(
                         MainActivity.this.getProperty(
                                 "beacontransfer.load.address.failed",
-                                device.getBeacon().getId()
+                                device.getBeacon().getTreeId()
                         )
                 );
             }
