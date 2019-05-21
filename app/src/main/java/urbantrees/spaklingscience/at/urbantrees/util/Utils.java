@@ -126,7 +126,9 @@ public class Utils {
             throw new RuntimeException("Advertisement pkg not set in BluetoothDevice " + device);
         }
 
-        long rawDateNum = ByteUtils.octalToDecimal(Arrays.copyOfRange(device.getAdvertisementPkg(), 56, 60));
+        byte[] trimmedAdvPkg = ByteUtils.trim(device.getAdvertisementPkg());
+        int trimmedAdvPkgLength = trimmedAdvPkg.length;
+        long rawDateNum = ByteUtils.octalToDecimal(Arrays.copyOfRange(trimmedAdvPkg, trimmedAdvPkgLength-4, trimmedAdvPkgLength));
         if (rawDateNum == 0) {
             return null;
         }

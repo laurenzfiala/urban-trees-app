@@ -196,30 +196,36 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(MainActivity.LOGGING_TAG, "onFragmentOpened - Start bluetooth scanning");
 
-        this.httpManager.fetchDeviceList(new Callback<Void>() {
-
+        Runnable r = new Runnable() {
             @Override
-            public void call(Void v) {
+            public void run() {
+                MainActivity.this.httpManager.fetchDeviceList(new Callback<Void>() {
 
-                AsyncTask r = new AsyncTask() {
                     @Override
-                    protected Void doInBackground(Object[] objects) {
-                        if (MainActivity.this.bluetoothCoordinator.enableBluetooth()) {
-                            MainActivity.this.bluetoothCoordinator.scanForDevices(MainActivity.this.httpManager.getAllowedDeviceAddresses());
-                        }
-                        return null;
+                    public void call(Void v) {
+                        AsyncTask r = new AsyncTask() {
+                            @Override
+                            protected Void doInBackground(Object[] objects) {
+                                if (MainActivity.this.bluetoothCoordinator.enableBluetooth()) {
+                                    MainActivity.this.bluetoothCoordinator.scanForDevices(MainActivity.this.httpManager.getAllowedDeviceAddresses());
+                                }
+                                return null;
+                            }
+                        };
+                        r.execute();
                     }
-                };
-                r.execute();
-            }
 
-            @Override
-            public void error(Throwable t) {
-                Log.e(LOGGING_TAG, "Error fetching device list: " + t.getMessage(), t);
-                Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_list_fetch_failed));
-            }
+                    @Override
+                    public void error(Throwable t) {
+                        Log.e(LOGGING_TAG, "Error fetching device list: " + t.getMessage(), t);
+                        Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_list_fetch_failed));
+                    }
 
-        });
+                });
+            }
+        };
+        Thread t = new Thread(r);
+        t.start();
 
     }
 
@@ -372,67 +378,44 @@ public class MainActivity extends AppCompatActivity
 
         try {
             UARTLogEntry[] logs = this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue();
+            final UARTCommand settingsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.SETTINGS_COMMAND);
+            final UARTCommand telemetricsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.TELEMETRICS_COMMAND);
 
-            this.httpManager.sendBeaconData(device.getBeacon(), logs, new Callback<Void>() {
+            this.httpManager.sendBeaconResult(device, logs, settingsCmd, telemetricsCmd, new Callback<Void>() {
                 @Override
                 public void call(Void v) {
-                    Log.i(LOGGING_TAG, "Successfully sent beacon data to server");
+                    Log.i(LOGGING_TAG, "Successfully sent beacon readout result to server");
+                    BeaconLogger.debug(device, "Data successfully sent to backend.");
                     statusFragment.setProgress(95);
 
-                    UARTCommand settingsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.SETTINGS_COMMAND);
-                    UARTCommand telemetricsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.TELEMETRICS_COMMAND);
-
-                    httpManager.sendBeaconSettings(device.getBeacon(), settingsCmd, telemetricsCmd, new Callback<Void>() {
+                    Handler h = new Handler(MainActivity.this.getMainLooper());
+                    Runnable r = new Runnable() {
                         @Override
-                        public void call(Void v) {
-                            Log.i(LOGGING_TAG, "Successfully sent beacon settings to server");
-                            BeaconLogger.debug(device, "Data successfully sent to backend.");
-
-                            Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
-                            Runnable r = new Runnable() {
-                                @Override
-                                public void run() {
-                                    FragmentManager fm = getSupportFragmentManager();
-                                    if (!fm.isDestroyed() && !fm.isStateSaved()) {
-                                        getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
-                                    }
-                                    redirectAfterBeacon(device);
-                                }
-                            };
-                            h.post(r);
-
-
-                            getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                        public void run() {
+                            FragmentManager fm = getSupportFragmentManager();
+                            if (!fm.isDestroyed() && !fm.isStateSaved()) {
+                                getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                            }
                             redirectAfterBeacon(device);
-
                         }
+                    };
+                    h.post(r);
 
-                        @Override
-                        public void error(Throwable t) {
-                            Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
-                            BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
-                            Handler h = new Handler(MainActivity.this.getMainLooper()); // TODO check if needed
-                            Runnable r = new Runnable() {
-                                @Override
-                                public void run() {
-                                    Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
-                                }
-                            };
-                            h.post(r);
-                        }
-                    });
+                    getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                    redirectAfterBeacon(device);
 
                 }
 
                 @Override
                 public void error(Throwable t) {
                     Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
-                    Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
                     BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
+                    Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
                 }
             });
         } catch (Throwable t) {
             Log.e(LOGGING_TAG, "Could not send beacon data: " + t.getMessage());
+            BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
         }
 
     }

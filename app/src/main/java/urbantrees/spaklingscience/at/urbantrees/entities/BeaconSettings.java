@@ -1,5 +1,7 @@
 package urbantrees.spaklingscience.at.urbantrees.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 /**
@@ -100,6 +102,7 @@ public class BeaconSettings {
     /**
      * Date of settings check.
      */
+    @JsonFormat(timezone="UTC")
     private Date checkDate = new Date();
 
     public int getId() {

@@ -19,6 +19,8 @@ public class BluetoothDevice {
 
     private final android.bluetooth.BluetoothDevice nativeDevice;
 
+    private long dataReadoutTime;
+
     public BluetoothDevice(final android.bluetooth.BluetoothDevice nativeDevice,
                            final int rssi,
                            final byte[] advertisementPkg) {
@@ -57,6 +59,14 @@ public class BluetoothDevice {
 
     public void setAdvertisementPkg(byte[] advertisementPkg) {
         this.advertisementPkg = advertisementPkg;
+    }
+
+    public long getDataReadoutTime() {
+        return dataReadoutTime;
+    }
+
+    public void setDataReadoutTime(long dataReadoutTime) {
+        this.dataReadoutTime = dataReadoutTime;
     }
 
     @Override

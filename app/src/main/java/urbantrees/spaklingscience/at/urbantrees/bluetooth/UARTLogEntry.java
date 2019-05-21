@@ -9,7 +9,7 @@ import java.util.Date;
  */
 public class UARTLogEntry {
 
-    private Date observationDate;
+    private Date observationDate; // TODO remove
 
     private double temperature;
     private double humidity;
@@ -38,4 +38,7 @@ public class UARTLogEntry {
         return dewPoint;
     }
 
+    public void setObservationDate(Date observationDate) {
+        this.observationDate = observationDate;
+    }
 }

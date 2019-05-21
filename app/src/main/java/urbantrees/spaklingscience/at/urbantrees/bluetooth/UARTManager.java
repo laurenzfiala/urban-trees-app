@@ -24,8 +24,13 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
 
     private static final String LOGGING_TAG = UARTManager.class.getName();
 
+    /**
+     * PIN used to fall back, if unlock does not work.
+     */
+    private static final String FALLBACK_PIN = "0000";
+
     private OnUARTManagerStatusChange listener;
-    
+
     private UARTCallbackHandler callbackHandler;
 
     /**
@@ -55,6 +60,7 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
 
     private boolean stopped = false;
     private boolean unlockDevice = true;
+    private boolean unlockFallbackUsed = false;
 
     public UARTManager(Activity context, ApplicationProperties props, BluetoothCoordinator bluetoothCoordinator, OnUARTManagerStatusChange listener) {
         super(context, props);
@@ -107,8 +113,17 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
             boolean isUnlocked = (boolean) this.getCurrentCommand().getResponses().get(0).getValue();
             this.finalizeCommand();
 
-            // check if (un-)lock was successful
-            if (this.afterLockCheck) {
+            if (this.unlockDevice && !isUnlocked && !this.unlockFallbackUsed && this.afterLockCheck) { // unlock failed, retry with fallback
+
+                this.unlockFallbackUsed = true;
+                String logMsg = "Device is still locked, falling back to PIN " + FALLBACK_PIN + " unlock.";
+                Log.d(LOGGING_TAG, logMsg);
+                BeaconLogger.warn(this.currentDevice, logMsg);
+                this.commandQueue.addFirst(UARTCommandType.LOCK_CHECK_COMMAND.getCommand());
+                this.commandQueue.addFirst(UARTCommandType.LOCK_UNLOCK_COMMAND.getCommand(FALLBACK_PIN));
+
+            } else if (this.afterLockCheck) { // check if (un-)lock was successful
+
                 this.afterLockCheck = false;
                 if (isUnlocked ^ unlockDevice) {
                     // failed (un-)lock
@@ -119,7 +134,9 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
                 } else {
                     // successful (un-)lock
                     this.unlockDevice = !this.unlockDevice;
+                    BeaconLogger.info(this.currentDevice, "Device was successfully " + (isUnlocked ? "unlocked" : "locked") + ".");
                 }
+
             } else if (isUnlocked ^ unlockDevice) { // check if we need to (un-)lock
 
                 String logMsg = "Device seems to be " + (isUnlocked ? "unlocked" : "locked")
@@ -136,8 +153,11 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
                 );
 
             } else {
+
                 // we don't need to (un-)lock
                 this.unlockDevice = !this.unlockDevice;
+                BeaconLogger.info(this.currentDevice, "Device was already unlocked.");
+
             }
 
             if (this.commandQueue.size() > 0) {

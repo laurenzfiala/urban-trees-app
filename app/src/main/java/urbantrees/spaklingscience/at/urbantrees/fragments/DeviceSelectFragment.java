@@ -2,6 +2,7 @@ package urbantrees.spaklingscience.at.urbantrees.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -93,13 +94,25 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
         mListener = null;
     }
 
-    public synchronized void addDevice(BluetoothDevice device) {
+    public synchronized void addDevice(final BluetoothDevice device) {
         if (this.getContext() == null) {
             return;
         }
 
-        this.deviceListLayout.addView(new DeviceListItemView(this.getContext(), this, device), this.displayDevices.size());
-        this.searchingDevicesText.setText(getResources().getString(R.string.search_devices_more));
+        Handler h = new Handler(this.getContext().getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                DeviceSelectFragment.this.deviceListLayout.addView(
+                        new DeviceListItemView(
+                                DeviceSelectFragment.this.getContext(),
+                                DeviceSelectFragment.this, device
+                        ),
+                        DeviceSelectFragment.this.displayDevices.size()-1
+                );
+                DeviceSelectFragment.this.searchingDevicesText.setText(getResources().getString(R.string.search_devices_more));
+            }
+        });
 
         this.displayDevices.add(device);
     }

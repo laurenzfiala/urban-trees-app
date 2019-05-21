@@ -325,6 +325,8 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
         @Override
         public UARTResponse<UARTLogEntry[]> getResponse(final UARTResponsePackage pkg) throws Throwable {
 
+            pkg.getAssocDevice().setDataReadoutTime(System.currentTimeMillis());
+
             Integer numLogs = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.CURRENT_NUM_LOGS).getValue();
             Integer logFreq = pkg.getPreviousCommands().<Integer>findResponse(UARTResponseType.LOG_FREQUENCY).getValue();
             UARTResponse<Date> refDateResponse = pkg.getPreviousCommands().<Date>findResponse(UARTResponseType.REFERENCE_DATE);
@@ -372,21 +374,27 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
 
             }
 
+            /* old impl - replaced because it is very dependant on timezones
+            *  we now calculate the timestamps on the backend */
+            // TODO comment out
             long logDate = refDate.getTime();
             if (numLogs > 6000) {
-                logDate += (logFreq * 1000) * (numLogs % 6000);
+                logDate += ((long) logFreq * 1000l) * ((long) numLogs - 6000l);
             }
 
             List<UARTLogEntry> entries = new ArrayList<UARTLogEntry>();
             for (int i = 0; i < vals[0].length; i++) {
 
-                if (vals[0][i] == null || vals[1][i] == null || vals[2][i] == null) {
-                    continue;
+                if (vals[0][i] == null && vals[1][i] == null && vals[2][i] == null) {
+                    break;
+                } else if (vals[0][i] == null || vals[1][i] == null || vals[2][i] == null) {
+                    BeaconLogger.error(pkg.getAssocDevice(), "Temp/Humi/Dew do not have equal amounts of datapoints stored.");
+                    throw new RuntimeException("Temp/Humi/Dew do not have equal amounts of datapoints stored.");
                 }
 
                 entries.add(
                         new UARTLogEntry(
-                                new Date(logDate), // TODO check
+                                new Date(logDate),
                                 vals[0][i],
                                 vals[1][i],
                                 vals[2][i]

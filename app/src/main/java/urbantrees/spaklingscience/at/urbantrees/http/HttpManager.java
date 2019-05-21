@@ -6,23 +6,28 @@ import android.util.Log;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
 import urbantrees.spaklingscience.at.urbantrees.activities.ApplicationProperties;
+import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommand;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTLogEntry;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTManager;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTResponse;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTResponseType;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
+import urbantrees.spaklingscience.at.urbantrees.entities.BeaconReadoutResult;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
+import urbantrees.spaklingscience.at.urbantrees.util.BeaconLogger;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
 import urbantrees.spaklingscience.at.urbantrees.util.HasContext;
 import urbantrees.spaklingscience.at.urbantrees.util.Utils;
@@ -142,30 +147,30 @@ public class HttpManager extends HasContext {
 
     }
 
-    public void sendBeaconData(Beacon beacon, UARTLogEntry[] logs, Callback callback) {
+    public void sendBeaconResult(BluetoothDevice device, UARTLogEntry[] logs, UARTCommand settingsCmd, UARTCommand telemetricsCmd, Callback callback) {
 
-        List<Object> datasets = new ArrayList<Object>();
-        for (UARTLogEntry entry : logs) {
-            datasets.add(entry);
-        }
-
-        if (datasets.size() == 0) {
+        if (logs == null || logs.length == 0) {
             Log.i(LOGGING_TAG, "No datasets received from beacon. Not uploading any.");
             callback.call(null);
             return;
         }
 
         try {
+
+            BeaconSettings settings = this.getBeaconSettings(device.getBeacon(), settingsCmd, telemetricsCmd);
+            long timeSinceDataReadoutMs = System.currentTimeMillis() - device.getDataReadoutTime();
+            BeaconReadoutResult result = new BeaconReadoutResult(logs, settings, timeSinceDataReadoutMs);
+
             DateFormat df = new SimpleDateFormat(this.props.getProperty("date.format"));
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
             String payload = new ObjectMapper()
                     .setDateFormat(df)
-                    .writeValueAsString(datasets);
+                    .writeValueAsString(result);
 
             HttpHandler f = new HttpHandler();
             f.execute(
                     new HttpHandlerParams(
-                            this.props.getProperty("beacon.datatransfer.url", beacon.getId()),
+                            this.props.getProperty("beacon.datatransfer.url", device.getBeacon().getId()),
                             HttpHandlerMethod.PUT,
                             headers,
                             payload
@@ -182,17 +187,15 @@ public class HttpManager extends HasContext {
 
     }
 
-    public void sendBeaconSettings(Beacon beacon, UARTCommand settingsCmd, UARTCommand telemetricsCmd, Callback callback) {
+    public BeaconSettings getBeaconSettings(Beacon beacon, UARTCommand settingsCmd, UARTCommand telemetricsCmd) {
 
         if (settingsCmd.getResponses().size() == 0) {
-            Log.i(LOGGING_TAG, "Settings have not been received.");
-            callback.call(null);
-            return;
+            BeaconLogger.error(beacon, "Can't send beacon settings, settings command info missing.");
+            throw new RuntimeException("Can't send beacon settings, settings command info missing.");
         }
         if (telemetricsCmd.getResponses().size() == 0) {
-            Log.i(LOGGING_TAG, "Telemetrics have not been received.");
-            callback.call(null);
-            return;
+            BeaconLogger.error(beacon, "Can't send beacon settings, telemetrics command info missing.");
+            throw new RuntimeException("Can't send beacon settings, telemetrics command info missing.");
         }
 
         BeaconSettings newSettings = new BeaconSettings();
@@ -213,29 +216,7 @@ public class HttpManager extends HasContext {
         newSettings.setPin(beacon.getSettings().getPin());
         newSettings.setCheckDate(new Date());
 
-        try {
-            DateFormat df = new SimpleDateFormat(this.props.getProperty("date.format"));
-            df.setTimeZone(TimeZone.getTimeZone("UTC"));
-            String newSettingsPayload = new ObjectMapper()
-                    .setDateFormat(df)
-                    .writeValueAsString(newSettings); // TODO move to config
-
-            HttpHandler f = new HttpHandler();
-            f.execute(
-                    new HttpHandlerParams(
-                            this.props.getProperty("beacon.settings.url", beacon.getId()),
-                            HttpHandlerMethod.PUT,
-                            headers,
-                            newSettingsPayload
-                    )
-            );
-            HttpHandlerResult res = f.get();
-            HttpHandlerResult.isSuccessfulElseThrow(res);
-
-            callback.call(null);
-        } catch (Throwable t) {
-            callback.error(t);
-        }
+        return newSettings;
 
     }
 

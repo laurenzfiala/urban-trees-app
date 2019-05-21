@@ -2,6 +2,7 @@ package urbantrees.spaklingscience.at.urbantrees.util;
 
 import android.app.Activity;
 import android.content.DialogInterface;
+import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -25,16 +26,22 @@ public class Dialogs {
      * @param context The calling activity.
      */
     public static void criticalDialog(final Activity context, final int messageStringId, final int positiveBtnStringId, final DialogInterface.OnClickListener positiveAction) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setCancelable(false)
-                .setMessage(messageStringId)
-                .setPositiveButton(positiveBtnStringId, positiveAction)
-                .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        context.finish();
-                    }
-                });
-        builder.create().show();
+        Handler h = new Handler(context.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setCancelable(false)
+                        .setMessage(messageStringId)
+                        .setPositiveButton(positiveBtnStringId, positiveAction)
+                        .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                context.finish();
+                            }
+                        });
+                builder.create().show();
+            }
+        });
     }
 
     /**
@@ -43,15 +50,21 @@ public class Dialogs {
      * @param message Message to show to the user.
      */
     public static void errorPrompt(final Activity context, final String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setCancelable(false)
-                .setMessage(message)
-                .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        context.finish();
-                    }
-                });
-        builder.create().show();
+        Handler h = new Handler(context.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setCancelable(false)
+                        .setMessage(message)
+                        .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                context.finish();
+                            }
+                        });
+                builder.create().show();
+            }
+        });
     }
 
     /**
