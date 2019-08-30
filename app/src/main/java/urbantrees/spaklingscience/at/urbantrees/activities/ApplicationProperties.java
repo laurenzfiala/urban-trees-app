@@ -10,6 +10,7 @@ import urbantrees.spaklingscience.at.urbantrees.http.HttpManager;
 public interface ApplicationProperties {
 
     String getProperty(String propertyKey, Object ...replacements);
+    String[] getArrayProperty(String propertyKey, Object ...replacements);
     boolean getBooleanProperty(String propertyKey, Object ...replacements);
     HttpManager getHttpManager();
 

@@ -1,11 +1,15 @@
 package urbantrees.spaklingscience.at.urbantrees.http;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import urbantrees.spaklingscience.at.urbantrees.activities.ApplicationProperties;
 import urbantrees.spaklingscience.at.urbantrees.activities.MainActivityInterface;
 
 /**
@@ -15,9 +19,23 @@ import urbantrees.spaklingscience.at.urbantrees.activities.MainActivityInterface
 public class CustomWebViewClient extends WebViewClient {
 
     private MainActivityInterface mainActivity;
+    private Context context;
 
-    public CustomWebViewClient(MainActivityInterface mainActivity) {
+    /**
+     * Urls allowed to be accessed inside the app.
+     * All other URLs will be loaded in the default browser.
+     */
+    private String[] allowedSiteUrls;
+
+    public CustomWebViewClient(MainActivityInterface mainActivity,
+                               Context context,
+                               ApplicationProperties props,
+                               String ...allowedSiteUrls) {
         this.mainActivity = mainActivity;
+        this.context = context;
+        this.allowedSiteUrls = allowedSiteUrls;
+
+        this.allowedSiteUrls = props.getArrayProperty("webview.allowed.urls");
     }
 
     @Override
@@ -37,6 +55,20 @@ public class CustomWebViewClient extends WebViewClient {
         super.onPageFinished(view, url);
         this.mainActivity.onWebviewPageFinished();
         this.mainActivity.showSearchControls();
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        for (String s : this.allowedSiteUrls) {
+            if (url.startsWith(s)) {
+                view.loadUrl(url);
+                return true;
+            }
+        }
+        this.context.startActivity(
+            new Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        );
+        return true;
     }
 
 }

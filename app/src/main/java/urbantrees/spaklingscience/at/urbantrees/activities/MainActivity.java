@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity
 
     public void initWebView() {
 
-        this.webViewClient = new CustomWebViewClient(this);
+        this.webViewClient = new CustomWebViewClient(this, this, this);
         this.webChromeClient = new CustomWebChromeClient(this);
 
         this.webView = (WebView) findViewById(R.id.web_view);
@@ -495,6 +495,15 @@ public class MainActivity extends AppCompatActivity
             property = property.replaceFirst("\\{\\}", r.toString());
         }
         return property;
+    }
+
+    @Override
+    public String[] getArrayProperty(String propertyKey, Object ...replacements) {
+        String property = this.props.getProperty(propertyKey);
+        for (Object r : replacements) {
+            property = property.replaceFirst("\\{\\}", r.toString());
+        }
+        return property.split("\\s");
     }
 
     @Override
