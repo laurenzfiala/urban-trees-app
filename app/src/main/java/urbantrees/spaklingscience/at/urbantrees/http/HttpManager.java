@@ -76,7 +76,9 @@ public class HttpManager extends HasContext {
 
             Log.d(LOGGING_TAG, "Fetched beacon list from remote successfully.");
 
-            this.beacons = new ObjectMapper().readValue(res.getResponseValue(), Beacon[].class);
+            this.beacons = new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    .readValue(res.getResponseValue(), Beacon[].class);
 
             List<String> allowedBluetoothAdresses = new ArrayList<String>();
             for (Beacon b : beacons) {
