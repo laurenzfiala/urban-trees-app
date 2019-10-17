@@ -129,9 +129,9 @@ public class MainActivity extends AppCompatActivity
         this.props = new Properties();
 
         String propertyFile = "config-prod.properties";
-        if (BuildConfig.DEBUG) {
-            propertyFile = "config.properties";
-        }
+        //if (BuildConfig.DEBUG) {
+        //    propertyFile = "config.properties";
+        //}
 
         try {
             this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
@@ -532,7 +532,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onWebviewPageFinished() {
-
+        this.webView.evaluateJavascript(
+                "localStorage.setItem('"
+                        + this.getProperty("api.key.localStorage.key")
+                        + "','"
+                        + this.getProperty("api.key")
+                        + "'); refreshLogin();",
+                null
+        );
     }
 
     @Override
@@ -544,14 +551,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onWebviewResouceLoaded() {
-        this.webView.evaluateJavascript(
-                "localStorage.setItem('"
-                        + this.getProperty("api.key.localStorage.key")
-                        + "','"
-                        + this.getProperty("api.key")
-                        + "');",
-                null
-        );
     }
 
 }
