@@ -68,6 +68,7 @@ public class BluetoothCoordinator {
     public boolean enableBluetooth() throws RuntimeException {
 
         if (this.bluetoothAdapter == null) {
+
             Log.e(LOG_TAG, "Device does not support bluetooth, adapter is null.");
             throw new RuntimeException("Could not enable bluetooth.");
 

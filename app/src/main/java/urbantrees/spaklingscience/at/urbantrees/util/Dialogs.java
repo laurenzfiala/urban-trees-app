@@ -1,7 +1,10 @@
 package urbantrees.spaklingscience.at.urbantrees.util;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
@@ -9,8 +12,17 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import urbantrees.spaklingscience.at.urbantrees.R;
+import urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode;
+import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivity;
 import urbantrees.spaklingscience.at.urbantrees.activities.MainActivity;
+import urbantrees.spaklingscience.at.urbantrees.activities.StatusActivity;
+import urbantrees.spaklingscience.at.urbantrees.entities.Status;
+import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
 
 /**
  * Created by Laurenz Fiala on 20/09/2017.
@@ -25,7 +37,7 @@ public class Dialogs {
      * The negative button closes the app.
      * @param context The calling activity.
      */
-    public static void criticalDialog(final Activity context, final int messageStringId, final int positiveBtnStringId, final DialogInterface.OnClickListener positiveAction) {
+    public static void dialog(final Activity context, final int messageStringId, final int positiveBtnStringId, final DialogInterface.OnClickListener positiveAction) {
         Handler h = new Handler(context.getMainLooper());
         h.post(new Runnable() {
             @Override
@@ -44,45 +56,18 @@ public class Dialogs {
         });
     }
 
-    /**
-     * Prompt to show to the user when a critical error occurs.
-     * @param context calling activity
-     * @param message Message to show to the user.
-     */
-    public static void errorPrompt(final Activity context, final String message) {
+    // TODO
+    public static void statusDialog(final Activity context, final Status status) {
         Handler h = new Handler(context.getMainLooper());
         h.post(new Runnable() {
             @Override
             public void run() {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setCancelable(false)
-                        .setMessage(message)
-                        .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                context.finish();
-                            }
-                        });
-                builder.create().show();
+
+                StatusActivity.putStatus(status);
+                context.startActivity(new Intent(context, StatusActivity.class));
+
             }
         });
-    }
-
-    /**
-     * Shows a dialog regarding internet connectivity to the user. The caller can decide what
-     * happens when the user wants to retry; if he doesn't, he may close the app.
-     * @param context calling activity
-     */
-    public static void noInternetDialog(final MainActivity context, final DialogInterface.OnClickListener onPositiveClick) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setCancelable(false)
-                .setMessage(R.string.error_no_internet)
-                .setPositiveButton(R.string.retry, onPositiveClick)
-                .setNegativeButton(R.string.close_app, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        context.finish();
-                    }
-                });
-        builder.create().show();
     }
 
     /**
@@ -90,7 +75,7 @@ public class Dialogs {
      * @param view The containing view of the calling actiivty.
      * @param text The Snackbar's test to show.
      */
-    public static final void progressSnackbar(View view, String text) {
+    public static void progressSnackbar(View view, String text) {
 
         if (activeSnackbar == null) {
             activeSnackbar = Snackbar.make(view, text, Snackbar.LENGTH_INDEFINITE);
@@ -109,10 +94,8 @@ public class Dialogs {
 
     }
 
-    /**
-     *
-     */
-    public static final void dismissSnackbar() {
+    // TODO
+    public static void dismissSnackbar() {
 
         if (activeSnackbar != null) {
             activeSnackbar.dismiss();

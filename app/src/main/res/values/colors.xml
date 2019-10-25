@@ -12,10 +12,9 @@
 
     <color name="colorTertiary">#694993</color>
 
-    <color name="colorText">#000000</color>
+    <color name="colorText">#555555</color>
     <color name="colorTextLight">#FFFFFF</color>
-    <color name="colorTextSubtle">#CCCCCC</color>
-    <color name="colorTextGrey">#888888</color>
+    <color name="colorTextSubtle">#818283</color>
 
     <color name="dividerColor">#CCCCCC</color>
 

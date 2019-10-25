@@ -10,9 +10,9 @@
     <string name="intro_subtitle">A Sparkling Science Project</string>
     <string name="intro_partners_addendum">and 12 schools from Austria, Germany and Hungary</string>
 
-    <string name="beacon_settings_fetch_failed">Failed to get beacon settings information.</string>
-    <string name="beacon_data_send_failed">Failed to send beacon data to server.</string>
-    <string name="beacon_list_fetch_failed">Failed to get list of beacons.</string>
+    <string name="error_beacon_settings_fetch">Failed to get beacon settings information.</string>
+    <string name="error_beacon_data_send">Failed to send beacon data to server.</string>
+    <string name="error_beacon_list_fetch">Failed to get list of beacons.</string>
 
     <!-- new strings -->
 
@@ -41,5 +41,15 @@
 
     <!-- WEBVIEW -->
     <string name="webview_resource_failed">Could not reach the webserver to show the website. Please try again or close the app.</string>
+    <string name="error_connection_failed">This might be due to a temporary application maintenance or a dropped internet connection.</string>
+    <string name="error_connection_failed_title">Could not open the application.</string>
+    <string name="error_general_title">An error occurred.</string>
+    <string name="error_general">An unkown error occurred in the application. Try to restart the app.</string>
+    <string name="error_no_internet_title">Activate internet access.</string>
+    <string name="error_beacon_list_fetch_title">Could not load beacons.</string>
+    <string name="error_beacon_settings_fetch_title">Could not load beacon data.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="error_beacon_data_send_title">Please try reading out the beacon again in a few moments.</string>
+    <string name="action_send_again">Send again</string>
 
 </resources>

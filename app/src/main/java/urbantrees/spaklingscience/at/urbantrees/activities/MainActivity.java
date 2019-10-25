@@ -23,8 +23,8 @@ import java.util.Properties;
 
 import urbantrees.spaklingscience.at.urbantrees.BuildConfig;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommandType;
-import urbantrees.spaklingscience.at.urbantrees.entities.BeaconLog;
-import urbantrees.spaklingscience.at.urbantrees.entities.BeaconStatus;
+import urbantrees.spaklingscience.at.urbantrees.entities.Status;
+import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebChromeClient;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebViewClient;
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -113,7 +113,6 @@ public class MainActivity extends AppCompatActivity
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         this.webView.setWebViewClient(this.webViewClient);
         this.webView.setWebChromeClient(this.webChromeClient);
-        //WebView.setWebContentsDebuggingEnabled(true); // TODO remove
 
     }
 
@@ -129,9 +128,9 @@ public class MainActivity extends AppCompatActivity
         this.props = new Properties();
 
         String propertyFile = "config-prod.properties";
-        //if (BuildConfig.DEBUG) {
-        //    propertyFile = "config.properties";
-        //}
+        if (BuildConfig.DEBUG) {
+            propertyFile = "config.properties";
+        }
 
         try {
             this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
@@ -218,7 +217,38 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void error(Throwable t) {
                         Log.e(LOGGING_TAG, "Error fetching device list: " + t.getMessage(), t);
-                        Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_list_fetch_failed));
+                        Dialogs.statusDialog(
+                                MainActivity.this,
+                                new Status(
+                                        R.drawable.error_internet_downstream,
+                                        R.string.error_beacon_list_fetch_title,
+                                        R.string.error_beacon_list_fetch,
+                                        new StatusAction() {
+                                            @Override
+                                            public int getStringResource() {
+                                                return R.string.action_cancel;
+                                            }
+
+                                            @Override
+                                            public void onAction(StatusActivity statusActivity) {
+                                                closeDeviceSelect();
+                                                statusActivity.finish();
+                                            }
+                                        },
+                                        new StatusAction() {
+                                            @Override
+                                            public int getStringResource() {
+                                                return R.string.retry;
+                                            }
+
+                                            @Override
+                                            public void onAction(StatusActivity statusActivity) {
+                                                MainActivity.this.onDeviceSelectOpened();
+                                                statusActivity.finish();
+                                            }
+                                        }
+                                )
+                        );
                     }
 
                 });
@@ -289,7 +319,26 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void error(Throwable t) {
                 Log.e(LOGGING_TAG, t.getMessage(), t);
-                Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_settings_fetch_failed));
+                Dialogs.statusDialog(
+                        MainActivity.this,
+                        new Status(
+                                R.drawable.error_internet_downstream,
+                                R.string.error_beacon_settings_fetch_title,
+                                R.string.error_beacon_settings_fetch,
+                                new StatusAction() {
+                                    @Override
+                                    public int getStringResource() {
+                                        return R.string.retry;
+                                    }
+
+                                    @Override
+                                    public void onAction(StatusActivity statusActivity) {
+                                        MainActivity.this.onDeviceSelected(device);
+                                        statusActivity.finish();
+                                    }
+                                }
+                        )
+                );
             }
         });
 
@@ -378,45 +427,86 @@ public class MainActivity extends AppCompatActivity
 
         try {
             UARTLogEntry[] logs = this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue();
-            final UARTCommand settingsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.SETTINGS_COMMAND);
-            final UARTCommand telemetricsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.TELEMETRICS_COMMAND);
+            UARTCommand settingsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.SETTINGS_COMMAND);
+            UARTCommand telemetricsCmd = uartManager.getSuccessfulCommands().find(UARTCommandType.TELEMETRICS_COMMAND);
 
-            this.httpManager.sendBeaconResult(device, logs, settingsCmd, telemetricsCmd, new Callback<Void>() {
-                @Override
-                public void call(Void v) {
-                    Log.i(LOGGING_TAG, "Successfully sent beacon readout result to server");
-                    BeaconLogger.debug(device, "Data successfully sent to backend.");
-                    statusFragment.setProgress(95);
-
-                    Handler h = new Handler(MainActivity.this.getMainLooper());
-                    Runnable r = new Runnable() {
-                        @Override
-                        public void run() {
-                            FragmentManager fm = getSupportFragmentManager();
-                            if (!fm.isDestroyed() && !fm.isStateSaved()) {
-                                getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
-                            }
-                            redirectAfterBeacon(device);
-                        }
-                    };
-                    h.post(r);
-
-                    getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
-                    redirectAfterBeacon(device);
-
-                }
-
-                @Override
-                public void error(Throwable t) {
-                    Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
-                    BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
-                    Dialogs.errorPrompt(MainActivity.this, getString(R.string.beacon_data_send_failed));
-                }
-            });
+            this.sendBeaconData(device, logs, settingsCmd, telemetricsCmd);
         } catch (Throwable t) {
             Log.e(LOGGING_TAG, "Could not send beacon data: " + t.getMessage());
             BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
         }
+
+    }
+
+    private void sendBeaconData(final BluetoothDevice device,
+                                final UARTLogEntry[] logs,
+                                final UARTCommand settingsCmd,
+                                final UARTCommand telemetricsCmd) {
+
+        final Callback<Void> callback = new Callback<Void>() {
+            @Override
+            public void call(Void v) {
+                Log.i(LOGGING_TAG, "Successfully sent beacon readout result to server");
+                BeaconLogger.debug(device, "Data successfully sent to backend.");
+                statusFragment.setProgress(95);
+
+                Handler h = new Handler(MainActivity.this.getMainLooper());
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        FragmentManager fm = getSupportFragmentManager();
+                        if (!fm.isDestroyed() && !fm.isStateSaved()) {
+                            getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                        }
+                        redirectAfterBeacon(device);
+                    }
+                };
+                h.post(r);
+
+                getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                redirectAfterBeacon(device);
+
+            }
+
+            @Override
+            public void error(Throwable t) {
+                Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
+                BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
+                Dialogs.statusDialog(
+                        MainActivity.this,
+                        new Status(
+                                R.drawable.error_internet_upstream,
+                                R.string.error_beacon_data_send_title,
+                                R.string.error_beacon_data_send,
+                                new StatusAction() {
+                                    @Override
+                                    public int getStringResource() {
+                                        return R.string.action_cancel;
+                                    }
+
+                                    @Override
+                                    public void onAction(StatusActivity statusActivity) {
+                                        statusActivity.finish();
+                                    }
+                                },
+                                new StatusAction() {
+                                    @Override
+                                    public int getStringResource() {
+                                        return R.string.retry;
+                                    }
+
+                                    @Override
+                                    public void onAction(StatusActivity statusActivity) {
+                                        MainActivity.this.sendBeaconData(device, logs, settingsCmd, telemetricsCmd);
+                                        statusActivity.finish();
+                                    }
+                                }
+                        )
+                );
+            }
+        };
+
+        this.httpManager.sendBeaconResult(device, logs, settingsCmd, telemetricsCmd, callback);
 
     }
 
@@ -512,7 +602,6 @@ public class MainActivity extends AppCompatActivity
         return "true".equals(property);
     }
 
-    @Override
     public HttpManager getHttpManager() {
         return this.httpManager;
     }
@@ -521,12 +610,38 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onWebviewError(WebResourceRequest request, WebResourceError error) {
         if (Build.VERSION.SDK_INT < 21 || request.isForMainFrame()) {
-            Dialogs.criticalDialog(this, R.string.webview_resource_failed, R.string.retry, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    MainActivity.this.loadInitialPage();
-                }
-            });
+            Dialogs.statusDialog(
+                    MainActivity.this,
+                    new Status(
+                            R.drawable.error_internet_upstream,
+                            R.string.error_connection_failed_title,
+                            R.string.error_connection_failed,
+                            new StatusAction() {
+                                @Override
+                                public int getStringResource() {
+                                    return R.string.close_app;
+                                }
+
+                                @Override
+                                public void onAction(StatusActivity statusActivity) {
+                                    statusActivity.finish();
+                                    System.exit(0);
+                                }
+                            },
+                            new StatusAction() {
+                                @Override
+                                public int getStringResource() {
+                                    return R.string.retry;
+                                }
+
+                                @Override
+                                public void onAction(StatusActivity statusActivity) {
+                                    MainActivity.this.loadInitialPage();
+                                    statusActivity.finish();
+                                }
+                            }
+                    )
+            );
         }
     }
 

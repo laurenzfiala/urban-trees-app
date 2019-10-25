@@ -107,7 +107,7 @@ public class IntroActivityDeprecated extends AppCompatActivity {
         }
         if (granted < NEEDED_PERMISSIONS.length) {
             this.isShowPermissionDialog = true;
-            Dialogs.criticalDialog(this, R.string.permreq_explanation, R.string.permreq_btn_yes, new DialogInterface.OnClickListener() {
+            Dialogs.dialog(this, R.string.permreq_explanation, R.string.permreq_btn_yes, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     IntroActivityDeprecated.this.requestPermissions(
                             IntroActivityDeprecated.NEEDED_PERMISSIONS,
@@ -147,7 +147,7 @@ public class IntroActivityDeprecated extends AppCompatActivity {
         if (manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             startIntroTimer();
         } else {
-            Dialogs.criticalDialog(this, R.string.enable_location_explanation, R.string.enable, new DialogInterface.OnClickListener() {
+            Dialogs.dialog(this, R.string.enable_location_explanation, R.string.enable, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     IntroActivityDeprecated.this.startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS), REQUEST_LOCATION_ENABLE);
                 }

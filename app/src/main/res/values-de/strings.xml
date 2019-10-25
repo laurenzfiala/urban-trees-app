@@ -9,9 +9,9 @@
     <string name="enable">Aktivieren</string>
     <string name="enable_location_explanation">Bitte schalten Sie die Standortbestimmung ein um fortzufahren.\nÜberprüfen Sie, ob netzwerkbasierte Standortbestimmung aktiviert ist und kehren Sie zurück zur App.</string>
 
-    <string name="beacon_settings_fetch_failed">Beacon-Einstellungen konnten nicht geladen werden.</string>
-    <string name="beacon_data_send_failed">Beacon-Daten konnten nicht gesendet werden.</string>
-    <string name="beacon_list_fetch_failed">Beacon-Liste konnte nicht geladen werden.</string>
+    <string name="error_beacon_settings_fetch">Beacon-Einstellungen konnten nicht geladen werden.</string>
+    <string name="error_beacon_data_send">Beacon-Daten konnten nicht gesendet werden.</string>
+    <string name="error_beacon_list_fetch">Beacon-Liste konnte nicht geladen werden.</string>
 
     <!-- new strings -->
 
@@ -40,4 +40,14 @@
 
     <!-- WEBVIEW -->
     <string name="webview_resource_failed">Die Website konnte nicht erreicht werden, bitte versuche es erneut oder schließe die App.</string>
+    <string name="error_connection_failed_title">Die Applikation konnte nicht geöffnet werden.</string>
+    <string name="error_connection_failed">Grund kann an eine kurzzeitige Applikationswartung oder eine unterbrochenen Internetverbindung sein.</string>
+    <string name="error_general_title">Ein Fehler ist aufgetreten.</string>
+    <string name="error_general">Ein unbekannter Fahler ist in der Applikation aufgetreten. Versuchen Sie, die Applikation neu zu starten.</string>
+    <string name="error_no_internet_title">Internetzugang aktivieren.</string>
+    <string name="error_beacon_list_fetch_title">Beaconinformationen konnten nicht abgerufen werden.</string>
+    <string name="error_beacon_settings_fetch_title">Beaconinformationen konnten nicht abgerufen werden.</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="error_beacon_data_send_title">Bitte versuchen Sie den Beacon in ein paar Minuten erneut auszulesen.</string>
+    <string name="action_send_again">Erneut senden</string>
 </resources>

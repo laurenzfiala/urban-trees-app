@@ -1,7 +1,7 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 /**
- * TODO
+ * Result codes for activity intents.
  * @author Laurenz Fiala
  * @since 2018/05/18
  */
