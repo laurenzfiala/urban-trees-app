@@ -8,8 +8,8 @@ android {
         applicationId "urbantrees.spaklingscience.at.urbantrees"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 27
-        versionName "0.2.6"
+        versionCode 29
+        versionName "0.2.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

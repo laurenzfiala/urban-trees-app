@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
         this.webView = (WebView) findViewById(R.id.web_view);
         this.webView.getSettings().setJavaScriptEnabled(true);
         this.webView.getSettings().setDomStorageEnabled(true);
-        this.webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+        this.webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
         this.webView.setWebViewClient(this.webViewClient);
         this.webView.setWebChromeClient(this.webChromeClient);
 
@@ -128,9 +128,9 @@ public class MainActivity extends AppCompatActivity
         this.props = new Properties();
 
         String propertyFile = "config-prod.properties";
-        if (BuildConfig.DEBUG) {
+        /*if (BuildConfig.DEBUG) {
             propertyFile = "config.properties";
-        }
+        }*/
 
         try {
             this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
@@ -616,18 +616,6 @@ public class MainActivity extends AppCompatActivity
                             R.drawable.error_internet_upstream,
                             R.string.error_connection_failed_title,
                             R.string.error_connection_failed,
-                            new StatusAction() {
-                                @Override
-                                public int getStringResource() {
-                                    return R.string.close_app;
-                                }
-
-                                @Override
-                                public void onAction(StatusActivity statusActivity) {
-                                    statusActivity.finish();
-                                    System.exit(0);
-                                }
-                            },
                             new StatusAction() {
                                 @Override
                                 public int getStringResource() {

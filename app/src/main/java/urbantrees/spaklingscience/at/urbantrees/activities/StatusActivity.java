@@ -56,7 +56,7 @@ public class StatusActivity extends FragmentActivity {
         Button actionBtn;
         for (final StatusAction a : status.getActions()) {
             actionBtn = new Button(this);
-            actionBtn.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            actionBtn.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             actionBtn.setText(this.getString(a.getStringResource()));
             actionBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
