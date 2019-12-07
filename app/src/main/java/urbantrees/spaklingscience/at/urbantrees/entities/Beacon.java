@@ -9,7 +9,7 @@ public class Beacon {
 
     private int id;
     private String deviceId;
-    private int treeId;
+    private TreeLight tree;
     private String bluetoothAddress;
     private String status;
     private BeaconSettings settings;
@@ -30,12 +30,16 @@ public class Beacon {
         this.deviceId = deviceId;
     }
 
-    public int getTreeId() {
-        return treeId;
+    public TreeLight getTree() {
+        return tree;
     }
 
-    public void setTreeId(int treeId) {
-        this.treeId = treeId;
+    public void setTree(TreeLight tree) {
+        this.tree = tree;
+    }
+
+    public int getTreeId() {
+        return this.tree.getId();
     }
 
     public String getBluetoothAddress() {

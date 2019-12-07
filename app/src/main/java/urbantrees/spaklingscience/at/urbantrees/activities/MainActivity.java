@@ -128,9 +128,9 @@ public class MainActivity extends AppCompatActivity
         this.props = new Properties();
 
         String propertyFile = "config-prod.properties";
-        /*if (BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             propertyFile = "config.properties";
-        }*/
+        }
 
         try {
             this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));

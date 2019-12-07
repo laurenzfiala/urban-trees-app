@@ -362,7 +362,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                         break charLoop;
                     }
 
-                    final double val = (double) ByteUtils.octalToDecimal(Arrays.copyOfRange(chars[i], j, j+2)) / 10d;
+                    final double val = (double) ByteUtils.twosComplementToDecimal(Arrays.copyOfRange(chars[i], j, j+2)) / 10d;
                     try {
                         vals[valIndex][valMetricIndex] = val;
                     } catch (ArrayIndexOutOfBoundsException e) {

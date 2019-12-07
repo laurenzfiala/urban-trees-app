@@ -32,6 +32,25 @@ public class ByteUtils {
     }
 
     /**
+     * Converts given big-endian byte-array to a single decimal value using the two's complement.
+     * Note: the byte array must have length of at most 8 (8*8 bytes = 1 long)
+     * @param bytes array if bytes
+     * @return The decimal-long representation of given byte array.
+     */
+    public static final long twosComplementToDecimal(byte[] bytes)
+    {
+
+        long l = ByteUtils.octalToDecimal(bytes);
+        final long maxValue = (long) Math.pow(2, bytes.length * 8);
+        if ((l & (0b1 << (bytes.length * 8 - 1))) > 0) {
+            l = l - maxValue;
+        }
+
+        return l;
+
+    }
+
+    /**
      * Cuts off all unused bytes from the given array
      * and returns a new array without treiling zeros.
      * @param rawBytes any byte array
