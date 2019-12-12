@@ -3,13 +3,13 @@ package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 import java.util.Date;
 
 /**
- * TODO
+ * DTO for a single beacon log entry (consisting of temperature, humidity and dew point).
  * @author Laurenz Fiala
  * @since 2018/05/20
  */
 public class UARTLogEntry {
 
-    private Date observationDate; // TODO remove
+    private Date observationDate;
 
     private double temperature;
     private double humidity;

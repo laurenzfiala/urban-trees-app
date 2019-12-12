@@ -393,11 +393,13 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                 }
 
                 entries.add(
-                        new UARTLogEntry(
-                                new Date(logDate),
-                                vals[0][i],
-                                vals[1][i],
-                                vals[2][i]
+                        Utils.correctHumidity(
+                            new UARTLogEntry(
+                                    new Date(logDate),
+                                    vals[0][i],
+                                    vals[1][i],
+                                    vals[2][i]
+                            )
                         )
                 );
                 logDate += (logFreq * 1000);

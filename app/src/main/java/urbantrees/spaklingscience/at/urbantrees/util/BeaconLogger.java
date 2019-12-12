@@ -1,6 +1,5 @@
 package urbantrees.spaklingscience.at.urbantrees.util;
 
-import android.app.Activity;
 import android.util.Log;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

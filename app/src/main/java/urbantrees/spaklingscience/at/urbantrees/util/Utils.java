@@ -29,6 +29,7 @@ import java.util.Map;
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivityDeprecated;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
+import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTLogEntry;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpHeader;
 
 /**
@@ -140,6 +141,27 @@ public class Utils {
         } catch (ParseException e) {
             throw new RuntimeException("Could not parse ref date from advertisement pkg.");
         }
+
+    }
+
+    /**
+     * Correct RH over 100% and correct dew point.
+     * @param logEntry log entry to correct, this instance is not modified
+     * @return if the humidity did not need correction, return logEntry; otherwise a new instance
+     *         with the correct values.
+     */
+    public static UARTLogEntry correctHumidity(UARTLogEntry logEntry) {
+
+        if (logEntry.getHumidity() <= 100) {
+            return logEntry;
+        }
+
+        return new UARTLogEntry(
+                logEntry.getObservationDate(),
+                logEntry.getTemperature(),
+                100,
+                logEntry.getTemperature() // when humidity is 100, dew point = temperature
+        );
 
     }
 
