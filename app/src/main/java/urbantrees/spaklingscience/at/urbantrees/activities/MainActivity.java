@@ -546,7 +546,7 @@ public class MainActivity extends AppCompatActivity
                 MainActivity.this.webView.loadUrl(
                         MainActivity.this.getProperty(
                                 "beacontransfer.load.address.failed",
-                                device.getBeacon().getTreeId()
+                                device.getBeacon().getId()
                         )
                 );
             }
@@ -565,8 +565,7 @@ public class MainActivity extends AppCompatActivity
                 MainActivity.this.showSearchControls();
                 final String url = MainActivity.this.getProperty(
                         "beacontransfer.load.address",
-                        device.getBeacon().getTreeId(),
-                        device.getBeacon().getDeviceId(),
+                        device.getBeacon().getId(),
                         MainActivity.this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue().length
                 );
                 Log.d(LOGGING_TAG, "Loading success page: " + url);
