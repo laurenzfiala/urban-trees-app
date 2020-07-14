@@ -207,6 +207,7 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
                 this.lockDevice();
                 this.commandTriesExceeded = true;
                 this.listener.onDeviceExecutionFailed(this.getCurrentDevice());
+                return;
             } else {
                 this.listener.onDeviceDisconnected(false);
                 try {

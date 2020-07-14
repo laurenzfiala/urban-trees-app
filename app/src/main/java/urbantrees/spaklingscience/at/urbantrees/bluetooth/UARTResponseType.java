@@ -336,6 +336,7 @@ public enum UARTResponseType implements UARTResponseTypeInterface {
                 refDate = Utils.geAdvPkgRefDate(pkg.getAssocDevice());
                 refDateResponse.setValue(refDate); // update value for settings transfer
             }
+
             if (refDate == null) {
                 BeaconLogger.error(pkg.getAssocDevice(), "Reference date is not set, cancelling command execution.");
                 throw new RuntimeException("Reference date must be set before command '" + this + "' can be executed.");

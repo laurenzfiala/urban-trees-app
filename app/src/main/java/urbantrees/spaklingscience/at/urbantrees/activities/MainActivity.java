@@ -563,14 +563,14 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 MainActivity.this.showSearchControls();
-                MainActivity.this.webView.loadUrl(
-                        MainActivity.this.getProperty(
-                                "beacontransfer.load.address",
-                                device.getBeacon().getTreeId(),
-                                device.getBeacon().getDeviceId(),
-                                MainActivity.this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue().length
-                        )
+                final String url = MainActivity.this.getProperty(
+                        "beacontransfer.load.address",
+                        device.getBeacon().getTreeId(),
+                        device.getBeacon().getDeviceId(),
+                        MainActivity.this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue().length
                 );
+                Log.d(LOGGING_TAG, "Loading success page: " + url);
+                MainActivity.this.webView.loadUrl(url);
             }
         };
         mainHandler.post(redirectRunnable);
