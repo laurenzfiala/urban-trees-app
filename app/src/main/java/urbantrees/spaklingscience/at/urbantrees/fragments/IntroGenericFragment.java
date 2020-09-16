@@ -1,15 +1,14 @@
 package urbantrees.spaklingscience.at.urbantrees.fragments;
 
-import android.app.Fragment;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import urbantrees.spaklingscience.at.urbantrees.R;
+import androidx.fragment.app.Fragment;
 
-public class IntroGenericFragment extends android.support.v4.app.Fragment {
+public class IntroGenericFragment extends Fragment {
 
     private static final String ARG_LAYOUT_RES_ID = "layoutResId";
     private int layoutResId;

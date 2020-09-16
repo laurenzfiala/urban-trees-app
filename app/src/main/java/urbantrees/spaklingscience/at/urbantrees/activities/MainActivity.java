@@ -1,15 +1,14 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.fragment.app.FragmentManager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
@@ -47,6 +46,7 @@ import urbantrees.spaklingscience.at.urbantrees.util.Utils;
 
 import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.FILECHOOSER_RESULT_CODE;
 import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.FILECHOOSER_RESULT_CODE_ARRAY;
+import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.INTENT_LOCATION_SOURCE_SETTINGS;
 import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.INTENT_REQUEST_ENABLE_BLUETOOTH;
 
 public class MainActivity extends AppCompatActivity
@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
 
         switch (requestCode) {
 
@@ -180,10 +181,12 @@ public class MainActivity extends AppCompatActivity
 
             case INTENT_REQUEST_ENABLE_BLUETOOTH:
                 if (resultCode == Activity.RESULT_OK) {
-                    this.onDeviceSelectOpened();
-                } else {
-                    this.closeDeviceSelect();
+                    this.showDeviceSelect();
                 }
+                break;
+
+            case INTENT_LOCATION_SOURCE_SETTINGS:
+                this.showDeviceSelect();
                 break;
         }
 
@@ -205,9 +208,7 @@ public class MainActivity extends AppCompatActivity
                         AsyncTask r = new AsyncTask() {
                             @Override
                             protected Void doInBackground(Object[] objects) {
-                                if (MainActivity.this.bluetoothCoordinator.enableBluetooth()) {
-                                    MainActivity.this.bluetoothCoordinator.scanForDevices(MainActivity.this.httpManager.getAllowedDeviceAddresses());
-                                }
+                                MainActivity.this.bluetoothCoordinator.scanForDevices(MainActivity.this.httpManager.getAllowedDeviceAddresses());
                                 return null;
                             }
                         };
@@ -262,6 +263,10 @@ public class MainActivity extends AppCompatActivity
     public void showDeviceSelect() {
         Log.d(MainActivity.LOGGING_TAG, "showDeviceSelect - Open device select dialog fragment");
 
+        if (!(this.bluetoothCoordinator.enableBluetooth() && this.bluetoothCoordinator.enableLocation())) {
+            return;
+        }
+
         this.webView.evaluateJavascript(
                 "getJWTToken();",
                 new ValueCallback<String>() {
@@ -279,6 +284,7 @@ public class MainActivity extends AppCompatActivity
 
         this.deviceSelectFragment = DeviceSelectFragment.newInstance();
         this.deviceSelectFragment.show(getSupportFragmentManager().beginTransaction(), DeviceSelectFragment.TAG);
+
     }
 
     public void closeDeviceSelect() {
@@ -296,7 +302,7 @@ public class MainActivity extends AppCompatActivity
     public void onDeviceSelected(final BluetoothDevice device) {
 
         this.closeDeviceSelect();
-        MainActivity.this.fab.setVisibility(View.GONE);
+        this.fab.setVisibility(View.GONE);
 
         if (this.uartManager == null) {
             this.uartManager = new UARTManager(this, this, this.bluetoothCoordinator, this);
@@ -608,7 +614,7 @@ public class MainActivity extends AppCompatActivity
     // ----- MainActivityInterface -----
     @Override
     public void onWebviewError(WebResourceRequest request, WebResourceError error) {
-        if (Build.VERSION.SDK_INT < 21 || request.isForMainFrame()) {
+        if (request.isForMainFrame()) {
             Dialogs.statusDialog(
                     MainActivity.this,
                     new Status(

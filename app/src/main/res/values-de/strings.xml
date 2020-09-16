@@ -7,7 +7,7 @@
     <string name="intro_partners_addendum">und 12 Schulen aus Deutschland, Österreich und Ungarn</string>
     <string name="intro_subtitle">Ein Sparkling Science Projekt</string>
     <string name="enable">Aktivieren</string>
-    <string name="enable_location_explanation">Bitte schalten Sie die Standortbestimmung ein um fortzufahren.\nÜberprüfen Sie, ob netzwerkbasierte Standortbestimmung aktiviert ist und kehren Sie zurück zur App.</string>
+    <string name="enable_location_explanation">Um Beacons zu suchen &amp; auszulesen muss die Standortbestimmung aktiviert sein.</string>
 
     <string name="error_beacon_settings_fetch">Beacon-Einstellungen konnten nicht geladen werden.</string>
     <string name="error_beacon_data_send">Beacon-Daten konnten nicht gesendet werden.</string>
@@ -16,7 +16,7 @@
     <!-- new strings -->
 
     <!-- GENERAL -->
-    <string name="app_name">COBS</string>
+    <string name="app_name">CO₂BS</string>
     <string name="retry">Nochmals versuchen</string>
 
     <!-- INTRO -->
@@ -43,11 +43,12 @@
     <string name="error_connection_failed_title">Die Applikation konnte nicht geöffnet werden.</string>
     <string name="error_connection_failed">Grund kann an eine kurzzeitige Applikationswartung oder eine unterbrochenen Internetverbindung sein.</string>
     <string name="error_general_title">Ein Fehler ist aufgetreten.</string>
-    <string name="error_general">Ein unbekannter Fahler ist in der Applikation aufgetreten. Versuchen Sie, die Applikation neu zu starten.</string>
     <string name="error_no_internet_title">Internetzugang aktivieren.</string>
     <string name="error_beacon_list_fetch_title">Beaconinformationen konnten nicht abgerufen werden.</string>
     <string name="error_beacon_settings_fetch_title">Beaconinformationen konnten nicht abgerufen werden.</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="error_beacon_data_send_title">Bitte versuchen Sie den Beacon in ein paar Minuten erneut auszulesen.</string>
     <string name="action_send_again">Erneut senden</string>
+    <string name="enable_location">Standort einschalten</string>
+    <string name="enable_location_explanation_more">Ab Android 9 muss die Standortbestimmung beim Suchen nach Bluetooth-Geräten aktiviert sein. Durch den Standort von Bluetooth-Geräten kann indirekt Dein Standort bestimmt werden.</string>
 </resources>

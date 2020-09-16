@@ -2,9 +2,11 @@
 
     <string name="intro_partners">In cooperation with</string>
     <string name="permreq_explanation">Please allow this app to access and control low accuracy location while opened.\n\nWithout this permission, the app can\'t work.</string>
-    <string name="enable_location_explanation">Please enable location services to continue.\nCheck if network based access is granted and return to the app.</string>
+    <string name="enable_location_explanation">You need to enable location to search &amp; read out beacons.</string>
+    <string name="enable_location_explanation_more">Since Android 9, location must be enabled for Bluetooth device discovery. It is possible to indirectly determine your location, if the location of a Bluetooth device is known.</string>
     <string name="permreq_btn_yes">Allow Location</string>
     <string name="enable">Enable</string>
+    <string name="enable_location">Enable Location</string>
     <string name="close_app">Close App</string>
     <string name="error_no_internet">No internet connection is available.\nTurn on WIFI or data service to continue.</string>
     <string name="intro_subtitle">A Sparkling Science Project</string>
@@ -17,7 +19,7 @@
     <!-- new strings -->
 
     <!-- GENERAL -->
-    <string name="app_name">COBS</string>
+    <string name="app_name">CO₂BS</string>
     <string name="retry">Retry</string>
 
     <!-- INTRO -->

@@ -10,5 +10,6 @@ public class ActivityResultCode {
     public static final int FILECHOOSER_RESULT_CODE = 1;
     public static final int FILECHOOSER_RESULT_CODE_ARRAY = 2;
     public static final int INTENT_REQUEST_ENABLE_BLUETOOTH = 3;
+    public static final int INTENT_LOCATION_SOURCE_SETTINGS = 4;
 
 }

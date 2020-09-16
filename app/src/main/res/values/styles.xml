@@ -10,4 +10,9 @@
         <item name="android:indeterminateDuration">1</item>
     </style>
 
+    <style name="dialog" parent="@style/Theme.AppCompat">
+        <item name="colorAccent">@color/colorSecondary</item>
+        <item name="android:background">@color/bgColor</item>
+    </style>
+
 </resources>

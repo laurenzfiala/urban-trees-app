@@ -7,9 +7,13 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.LocationManager;
+import android.location.SettingInjectorService;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.text.DateFormat;
@@ -21,8 +25,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.core.location.LocationManagerCompat;
+import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode;
 import urbantrees.spaklingscience.at.urbantrees.util.ByteUtils;
+import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
 
 /**
  * High level abstraction layer used to harden bluetooth
@@ -61,9 +68,10 @@ public class BluetoothCoordinator {
     }
 
     /**
-     * TODO
-     * this triggers request to source activity
-     * @return
+     * If the {@link #bluetoothAdapter} is disabled, sends a request intent for
+     * enabling bluetooth to the OS.
+     * @return If the user agreed, return true; otherwise false.
+     * @throws RuntimeException if {@link #bluetoothAdapter} is null.
      */
     public boolean enableBluetooth() throws RuntimeException {
 
@@ -82,6 +90,46 @@ public class BluetoothCoordinator {
         }
 
         return true;
+
+    }
+
+    /**
+     * TODO
+     * this triggers request to source activity
+     * @return
+     */
+    public boolean enableLocation() throws RuntimeException {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return true;
+        }
+
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (LocationManagerCompat.isLocationEnabled(lm)) {
+            return true;
+        } else {
+            Log.d(LOG_TAG, "Location is turned off. Informing user.");
+            Dialogs.dialog(this.context,
+                    R.layout.view_dialog_enable_location,
+                    R.string.enable_location,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent showLocationSettingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            BluetoothCoordinator.this.context.startActivityForResult(
+                                    showLocationSettingsIntent,
+                                    ActivityResultCode.INTENT_LOCATION_SOURCE_SETTINGS
+                            );
+                        }
+                    },
+                    new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialog) {
+
+                        }
+                    });
+        }
+        return false;
 
     }
 

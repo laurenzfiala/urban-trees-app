@@ -1,0 +1,46 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/default_margin"
+    android:paddingTop="@dimen/default_margin"
+    android:paddingEnd="@dimen/default_margin">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="@dimen/dialog_icon_size"
+            android:layout_height="@dimen/dialog_icon_size"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:src="@mipmap/location_icon_grey" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="@dimen/small_margin"
+                android:paddingTop="2dp"
+                android:text="@string/enable_location_explanation"
+                android:textColor="@color/colorText"
+                android:textSize="@dimen/default_text_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/enable_location_explanation_more"
+                android:textColor="@color/colorTextSubtle"
+                android:textSize="@dimen/text_size_sm" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

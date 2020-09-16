@@ -2,22 +2,11 @@ package urbantrees.spaklingscience.at.urbantrees.util;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -26,8 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
-import urbantrees.spaklingscience.at.urbantrees.R;
-import urbantrees.spaklingscience.at.urbantrees.activities.IntroActivityDeprecated;
+import androidx.fragment.app.Fragment;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTLogEntry;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpHeader;
@@ -57,7 +45,7 @@ public class Utils {
      * Only applicable to android 6 and higher (api 23).
      */
     @TargetApi(23)
-    public static void requestPermissions(Activity activity, android.support.v4.app.Fragment context, final String[] requestPermissions, final int requestCode) {
+    public static void requestPermissions(Activity activity, Fragment context, final String[] requestPermissions, final int requestCode) {
 
         if(Build.VERSION.SDK_INT < 23) {
             throw new RuntimeException("Tried to request permissions in android api lower than 23.");

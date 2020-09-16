@@ -3,10 +3,12 @@ package urbantrees.spaklingscience.at.urbantrees.activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
@@ -232,7 +234,7 @@ public class IntroActivity extends FragmentActivity {
 
         // Returns the fragment to display for that page
         @Override
-        public android.support.v4.app.Fragment getItem(int position) {
+        public Fragment getItem(int position) {
             switch (position) {
                 case 0:
                     return IntroMainFragment.newInstance(isTreeDataCollectEnabled);
