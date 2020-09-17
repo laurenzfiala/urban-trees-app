@@ -3,14 +3,14 @@
     <color name="bgColor">#FAFAFA</color>
 
     <!-- palette colors -->
-    <color name="colorPrimary">#385fba</color>
-    <color name="colorPrimaryLight">#bbc2d1</color>
+    <color name="colorPrimary">#18628D</color>
+    <color name="colorPrimaryLight">#BFE0F4</color>
 
-    <color name="colorSecondaryDark">#447e31</color>
-    <color name="colorSecondary">#518c3d</color>
-    <color name="colorSecondaryLight">#c5debc</color>
+    <color name="colorSecondary">#0D6E6D</color>
+    <color name="colorSecondaryLight">#D0F9F9</color>
 
-    <color name="colorTertiary">#694993</color>
+    <color name="colorTertiary">#638A20</color>
+    <color name="colorTertiaryLight">#E5F3CC</color>
 
     <color name="colorText">#555555</color>
     <color name="colorTextLight">#FFFFFF</color>

@@ -4,18 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorSecondary"
-    tools:context=".BluetoothPermission">
+    android:background="@color/colorPrimary">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="top"
         android:orientation="vertical"
-        android:paddingBottom="64dp"
         android:paddingLeft="32dp"
-        android:paddingRight="32dp"
         android:paddingTop="64dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="64dp"
         tools:layout_editor_absoluteX="32dp"
         tools:layout_editor_absoluteY="32dp">
 
@@ -33,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="78dp"
             android:text="@string/intro_main_text"
-            android:textColor="@color/colorSecondaryLight"
+            android:textColor="@color/colorPrimaryLight"
             android:textColorLink="@color/colorTextSubtle"
             android:textSize="@dimen/intro_text_size" />
 
@@ -42,19 +41,19 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:paddingBottom="32dp"
             android:paddingTop="32dp"
-            android:src="@mipmap/urbantrees_icon" />
+            android:paddingBottom="32dp"
+            android:src="@drawable/urbantrees_icon" />
 
         <Switch
             android:id="@+id/intro_main_collect_toggle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:paddingBottom="20dp"
             android:paddingTop="20dp"
+            android:paddingBottom="20dp"
             android:text="I want to collect data from trees"
-            android:textColor="@color/colorSecondaryLight"
+            android:textColor="@color/colorPrimaryLight"
             android:textOff="You can change this at any time in the settings menu"
             android:textSize="@dimen/intro_text_size"
             tools:layout_editor_absoluteX="32dp"

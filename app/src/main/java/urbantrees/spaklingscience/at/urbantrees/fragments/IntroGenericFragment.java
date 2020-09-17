@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
 
-public class IntroGenericFragment extends Fragment {
+public class IntroGenericFragment extends Fragment implements IntroFragment {
 
     private static final String ARG_LAYOUT_RES_ID = "layoutResId";
     private int layoutResId;

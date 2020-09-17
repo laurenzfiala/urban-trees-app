@@ -19,11 +19,14 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.fragments.IntroBluetoothPermissionFragment;
+import urbantrees.spaklingscience.at.urbantrees.fragments.IntroFragment;
 import urbantrees.spaklingscience.at.urbantrees.fragments.IntroGenericFragment;
 import urbantrees.spaklingscience.at.urbantrees.fragments.IntroMainFragment;
 import urbantrees.spaklingscience.at.urbantrees.util.PreferenceManager;
@@ -53,7 +56,7 @@ public class IntroActivity extends FragmentActivity {
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         }
 
@@ -95,13 +98,12 @@ public class IntroActivity extends FragmentActivity {
 
         this.dots = new TextView[myViewPagerAdapter.getCount()];
 
-        int dotsColorActive = getResources().getColor(R.color.colorText);
         int dotsColorInactive = getResources().getColor(R.color.colorTextLight);
 
         dotsLayout.removeAllViews();
         for (int i = 0; i < dots.length; i++) {
             dots[i] = new TextView(this);
-            dots[i].setText(Html.fromHtml("&#8226;"));
+            dots[i].setText(Html.fromHtml("&ndash;"));
             dots[i].setTextSize(35);
             dots[i].setAlpha(0.2f);
             dots[i].setTextColor(dotsColorInactive);
@@ -109,11 +111,17 @@ public class IntroActivity extends FragmentActivity {
         }
 
         if (dots.length > 0) {
-            dots[currentPage].setTextColor(dotsColorActive);
+            dots[currentPage].setAlpha(0.8f);
         }
 
-        if (myViewPagerAdapter.getCurrentIntroFragment() != null) {
-            btnNext.setEnabled(myViewPagerAdapter.getCurrentIntroFragment().canContinue());
+        if (myViewPagerAdapter.getCachedItem(currentPage) != null) {
+            btnNext.setVisibility(((IntroFragment) myViewPagerAdapter.getCachedItem(currentPage)).canContinue() ? View.VISIBLE : View.INVISIBLE);
+        }
+
+        if (currentPage == IntroActivity.this.myViewPagerAdapter.getCount() - 1) {
+            btnNext.setText(getString(R.string.intro_nav_done));
+        } else {
+            btnNext.setText(getString(R.string.intro_nav_next));
         }
 
     }
@@ -161,12 +169,6 @@ public class IntroActivity extends FragmentActivity {
         @Override
         public void onPageSelected(int position) {
             updateNavigation(position);
-
-            if (position == IntroActivity.this.myViewPagerAdapter.getCount() - 1) {
-                btnNext.setText(getString(R.string.intro_nav_done));
-            } else {
-                btnNext.setText(getString(R.string.intro_nav_next));
-            }
         }
 
         @Override
@@ -191,24 +193,21 @@ public class IntroActivity extends FragmentActivity {
      */
     public class MyViewPagerAdapter extends FragmentPagerAdapter {
 
-        private List<IntroGenericFragment> fragments = new ArrayList<IntroGenericFragment>();
+        private Fragment[] items = new Fragment[0];
         private int currentPosition;
-
         private long baseId = 0;
 
         public MyViewPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
-        public IntroGenericFragment getCurrentIntroFragment() {
-            return (IntroGenericFragment) this.getItem(currentPosition);
+        public Fragment getCachedItem(int position) {
+            return this.items.length > position ? this.items[position] : null;
         }
 
         @Override
         public void setPrimaryItem(ViewGroup container, int position, Object object) {
-            if (getCurrentIntroFragment() != object) {
-                this.currentPosition = currentPosition;
-            }
+            this.currentPosition = position;
             super.setPrimaryItem(container, position, object);
         }
 
@@ -235,20 +234,26 @@ public class IntroActivity extends FragmentActivity {
         // Returns the fragment to display for that page
         @Override
         public Fragment getItem(int position) {
+
+            Fragment newFragment = null;
             switch (position) {
                 case 0:
-                    return IntroMainFragment.newInstance(isTreeDataCollectEnabled);
+                    newFragment = IntroMainFragment.newInstance(isTreeDataCollectEnabled);
+                    break;
                 case 1:
                     if (isTreeDataCollectEnabled) {
-                        return IntroBluetoothPermissionFragment.newInstance();
+                        newFragment = IntroBluetoothPermissionFragment.newInstance();
                     } else {
-                        return IntroGenericFragment.newInstance(R.layout.fragment_intro_done);
+                        newFragment = IntroGenericFragment.newInstance(R.layout.fragment_intro_done);
                     }
+                    break;
                 case 2:
-                    return IntroGenericFragment.newInstance(R.layout.fragment_intro_done);
-                default:
-                    return null;
+                    newFragment = IntroGenericFragment.newInstance(R.layout.fragment_intro_done);
+                    break;
             }
+            this.items[position] = newFragment;
+            return newFragment;
+
         }
 
         @Override
@@ -261,6 +266,7 @@ public class IntroActivity extends FragmentActivity {
             if (!IntroActivity.this.isTreeDataCollectEnabled) {
                 pages = 2;
             }
+            this.items = Arrays.copyOf(this.items, pages);
             return pages;
 
         }

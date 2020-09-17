@@ -28,7 +28,8 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
     public static final String[]    NEEDED_PERMISSIONS = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
     };
 
     private Switch permissionsGrantedToggle;
@@ -110,7 +111,11 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
         this.permissionsGrantedToggle.setChecked(this.isPermissionsGranted());
     }
 
+    @Override
     public boolean canContinue() {
+        if (this.permissionsGrantedToggle == null) {
+            return false;
+        }
         return this.permissionsGrantedToggle.isChecked();
     }
 

@@ -4,17 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@color/colorSecondary">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="top"
         android:orientation="vertical"
-        android:paddingBottom="64dp"
         android:paddingLeft="32dp"
-        android:paddingRight="32dp"
         android:paddingTop="64dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="64dp"
         tools:layout_editor_absoluteX="32dp"
         tools:layout_editor_absoluteY="32dp">
 
@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="78dp"
             android:text="@string/intro_bluetooth_permission_text"
-            android:textColor="@color/colorPrimaryLight"
+            android:textColor="@color/colorSecondaryLight"
             android:textColorLink="@color/colorTextSubtle"
             android:textSize="@dimen/intro_text_size" />
 
@@ -41,8 +41,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:paddingBottom="32dp"
             android:paddingTop="32dp"
+            android:paddingBottom="32dp"
             android:src="@drawable/bluetooth_icon" />
 
         <Switch
@@ -50,8 +50,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:paddingBottom="20dp"
             android:paddingTop="20dp"
+            android:paddingBottom="20dp"
             android:text="@string/intro_bluetooth_permission_request_button"
             android:textColor="@color/colorSecondaryLight"
             android:textOff="You can change this at any time in the settings menu"

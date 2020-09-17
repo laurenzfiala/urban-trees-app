@@ -11,10 +11,10 @@
         android:layout_height="match_parent"
         android:gravity="top"
         android:orientation="vertical"
-        android:paddingBottom="64dp"
         android:paddingLeft="32dp"
-        android:paddingRight="32dp"
         android:paddingTop="64dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="64dp"
         tools:layout_editor_absoluteX="32dp"
         tools:layout_editor_absoluteY="32dp">
 
@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="78dp"
             android:text="@string/intro_done_text"
-            android:textColor="@color/colorPrimaryLight"
+            android:textColor="@color/colorTertiaryLight"
             android:textColorLink="@color/colorTextSubtle"
             android:textSize="@dimen/intro_text_size" />
 
@@ -40,8 +40,8 @@
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="80dp"
             android:paddingTop="32dp"
+            android:paddingBottom="80dp"
             android:src="@drawable/tick_icon" />
 
     </LinearLayout>
