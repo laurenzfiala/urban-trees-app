@@ -3,12 +3,8 @@ package urbantrees.spaklingscience.at.urbantrees.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.fragment.app.FragmentManager;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
@@ -17,26 +13,32 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
 import urbantrees.spaklingscience.at.urbantrees.BuildConfig;
-import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommandType;
-import urbantrees.spaklingscience.at.urbantrees.entities.Status;
-import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
-import urbantrees.spaklingscience.at.urbantrees.http.CustomWebChromeClient;
-import urbantrees.spaklingscience.at.urbantrees.http.CustomWebViewClient;
 import urbantrees.spaklingscience.at.urbantrees.R;
-import urbantrees.spaklingscience.at.urbantrees.fragments.StatusBottomSheetFragment;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothCoordinator;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommand;
+import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommandType;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTLogEntry;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTManager;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTResponseType;
+import urbantrees.spaklingscience.at.urbantrees.bluetooth.bluemaestro.BlueMaestroHelper;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
+import urbantrees.spaklingscience.at.urbantrees.entities.Status;
+import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
 import urbantrees.spaklingscience.at.urbantrees.fragments.DeviceSelectFragment;
+import urbantrees.spaklingscience.at.urbantrees.fragments.StatusBottomSheetFragment;
+import urbantrees.spaklingscience.at.urbantrees.http.CustomWebChromeClient;
+import urbantrees.spaklingscience.at.urbantrees.http.CustomWebViewClient;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpManager;
 import urbantrees.spaklingscience.at.urbantrees.util.BeaconLogger;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
@@ -88,7 +90,11 @@ public class MainActivity extends AppCompatActivity
         this.httpManager = new HttpManager(this, this);
         this.httpManager.setApiKeyToken(this.getProperty("api.key"));
 
-        this.bluetoothCoordinator = new BluetoothCoordinator(this, this);
+        this.bluetoothCoordinator = new BluetoothCoordinator(
+                this,
+                this,
+                BlueMaestroHelper.getBeaconScanFilters()
+        );
 
         this.fab = findViewById(R.id.fab);
         this.fab.setOnClickListener(new View.OnClickListener() {
@@ -208,7 +214,7 @@ public class MainActivity extends AppCompatActivity
                         AsyncTask r = new AsyncTask() {
                             @Override
                             protected Void doInBackground(Object[] objects) {
-                                MainActivity.this.bluetoothCoordinator.scanForDevices(MainActivity.this.httpManager.getAllowedDeviceAddresses());
+                                MainActivity.this.bluetoothCoordinator.startScan();
                                 return null;
                             }
                         };
@@ -293,9 +299,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDeviceSelectClosed() {
-        Log.d(MainActivity.LOGGING_TAG, "onFragmentClosed - Stop bluetooth scanning");
+    public void onCloseDeviceSelect() {
+        Log.d(MainActivity.LOGGING_TAG, "onCloseDeviceSelect - Stop bluetooth scanning");
         this.bluetoothCoordinator.stopScan();
+    }
+
+    @Override
+    public void onDeviceSelectClosed() {
+        Log.d(MainActivity.LOGGING_TAG, "onDeviceSelectClosed");
     }
 
     @Override
@@ -363,24 +374,79 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onScanFailed() {
+
+        Log.e(LOGGING_TAG, "Failed to start BLE scan.");
+        Dialogs.statusDialog(
+                this,
+                new Status(
+                        R.drawable.error_general,
+                        R.string.error_beacon_scan_title,
+                        R.string.error_beacon_scan,
+                        new StatusAction() {
+                            @Override
+                            public int getStringResource() {
+                                return R.string.action_cancel;
+                            }
+
+                            @Override
+                            public void onAction(StatusActivity statusActivity) {
+                                statusActivity.finish();
+                            }
+                        },
+                        new StatusAction() {
+                            @Override
+                            public int getStringResource() {
+                                return R.string.retry;
+                            }
+
+                            @Override
+                            public void onAction(StatusActivity statusActivity) {
+                                statusActivity.finish();
+                                MainActivity.this.showDeviceSelect();
+                            }
+                        }
+                )
+        );
+
+    }
+
+    @Override
     public void onBluetoothDeviceDiscovered(BluetoothDevice device) {
-        // not in use
+
+        if (this.attachBeaconToDevice(device)) {
+            Log.d(LOGGING_TAG, "Re-discovered known beacon: " + device);
+            BeaconLogger.trace(device, "Re-discovered known beacon: " + device);
+        }
+
+        this.deviceSelectFragment.updateDevice(device);
+
     }
 
     @Override
     public void onNewBluetoothDeviceDiscovered(BluetoothDevice device) {
 
-        for (Beacon b : this.httpManager.getBeacons()) {
-            if (b.getBluetoothAddress().equals(device.getAddress())) {
-                device.setBeacon(b);
-                break;
+        if (this.attachBeaconToDevice(device)) {
+            Log.d(LOGGING_TAG, "Discovered known beacon: " + device);
+            BeaconLogger.trace(device, "Discovered known beacon: " + device);
+        }
+
+        this.deviceSelectFragment.addDevice(device);
+
+    }
+
+    private boolean attachBeaconToDevice(final BluetoothDevice device) {
+
+        if (this.httpManager.getAllowedDeviceAddresses().contains(device.getAddress())) {
+            for (Beacon b : this.httpManager.getBeacons()) {
+                if (b.getBluetoothAddress().equals(device.getAddress())) {
+                    device.setBeacon(b);
+                    return true;
+                }
             }
         }
 
-        if (device.getBeacon() != null) {
-            this.deviceSelectFragment.addDevice(device);
-            BeaconLogger.trace(device, "Discovered beacon matching filter.");
-        }
+        return false;
 
     }
 

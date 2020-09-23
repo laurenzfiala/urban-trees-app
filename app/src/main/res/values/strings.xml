@@ -53,5 +53,8 @@
     <string name="action_cancel">Cancel</string>
     <string name="error_beacon_data_send_title">Please try reading out the beacon again in a few moments.</string>
     <string name="action_send_again">Send again</string>
+    <string name="search_devices_unknown_device">Unknown beacon</string>
+    <string name="error_beacon_scan_title">Scanning for beacons failed</string>
+    <string name="error_beacon_scan">For unknown reasons, beacon scanning could not be started.</string>
 
 </resources>

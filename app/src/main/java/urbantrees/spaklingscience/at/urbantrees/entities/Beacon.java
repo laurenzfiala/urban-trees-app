@@ -65,4 +65,16 @@ public class Beacon {
     public void setSettings(BeaconSettings settings) {
         this.settings = settings;
     }
+
+    @Override
+    public String toString() {
+        return "Beacon{" +
+                "id=" + id +
+                ", deviceId='" + deviceId + '\'' +
+                ", tree=" + tree +
+                ", bluetoothAddress='" + bluetoothAddress + '\'' +
+                ", status='" + status + '\'' +
+                ", settings=" + settings +
+                '}';
+    }
 }

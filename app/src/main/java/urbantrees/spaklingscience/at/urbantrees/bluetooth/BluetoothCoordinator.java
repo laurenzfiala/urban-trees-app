@@ -1,34 +1,30 @@
 package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
-import android.location.SettingInjectorService;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import androidx.core.location.LocationManagerCompat;
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode;
-import urbantrees.spaklingscience.at.urbantrees.util.ByteUtils;
 import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
 
 /**
@@ -45,20 +41,22 @@ public class BluetoothCoordinator {
     private static final String LOG_TAG = BluetoothCoordinator.class.getName();
 
     private Activity context;
-
     private OnBluetoothCoordinatorChange listener;
 
     public BluetoothAdapter bluetoothAdapter;
+    private BluetoothLeScanner scanner;
 
-    private List<String> filterAdresses;
+    private List<ScanFilter> scanFilters;
+    private ScanCallback scanCallback;
 
-    private AsyncTask scanTask;
+    private Set<BluetoothDevice> devices = new LinkedHashSet<>();
 
-    private Set<BluetoothDevice> devices = new LinkedHashSet<BluetoothDevice>();
-
-    public BluetoothCoordinator(Activity context, OnBluetoothCoordinatorChange listener) {
+    public BluetoothCoordinator(Activity context,
+                                OnBluetoothCoordinatorChange listener,
+                                List<ScanFilter> scanFilters) {
         this.context = context;
         this.listener = listener;
+        this.scanFilters = scanFilters;
         this.getBluetoothAdapter();
     }
 
@@ -94,9 +92,12 @@ public class BluetoothCoordinator {
     }
 
     /**
-     * TODO
-     * this triggers request to source activity
-     * @return
+     * Checks if the devices' location service may be accessed. If not, an info dialog is shown t
+     * the user. If in turn this dialog is acceppted, the user is redirected to the location
+     * settings where they can activate location services.
+     * Upon returning from the settings page, if the location was turned on, an intent result will
+     * be triggered in {@link #context}.
+     * @return true if location is already on; false otherwise.
      */
     public boolean enableLocation() throws RuntimeException {
 
@@ -133,65 +134,76 @@ public class BluetoothCoordinator {
 
     }
 
-    public void scanForDevices(final List<String> filterAdresses) {
-
-        this.filterAdresses = filterAdresses;
-
-        this.scanTask = new AsyncTask() {
-            @Override
-            protected Void doInBackground(Object[] objects) {
-                startScan();
-                return null;
-            }
-        };
-        this.scanTask.execute();
-
-    }
-
-    private Object scanCallback;
-
     public void startScan() {
 
         this.listener.onScanStart();
 
-        this.scanCallback = new BluetoothAdapter.LeScanCallback() {
+        this.scanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+                Log.d(LOG_TAG, "onScanResult - discovered device: " + result.getDevice().getAddress());
+                BluetoothCoordinator.this.onDeviceFound(result);
+            }
 
             @Override
-            public void onLeScan(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
-                BluetoothCoordinator.this.onDeviceFound(device, rssi, scanRecord);
+            public void onScanFailed(int errorCode) {
+                super.onScanFailed(errorCode);
+                Log.d(LOG_TAG, "onScanFailed - failed to start scan: error code " + errorCode);
+                BluetoothCoordinator.this.listener.onScanFailed();
             }
         };
-        this.bluetoothAdapter.startLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
+
+        ScanSettings.Builder settingsBuilder = new ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+                .setReportDelay(0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            settingsBuilder
+                .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                .setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT);
+        }
+
+        this.scanner = this.bluetoothAdapter.getBluetoothLeScanner();
+        Log.d(LOG_TAG, "startScan - start scanning");
+        this.scanner.startScan(this.scanFilters, settingsBuilder.build(), this.scanCallback);
 
     }
 
     public void stopScan() {
 
         if (this.bluetoothAdapter.isEnabled()) {
-            this.bluetoothAdapter.stopLeScan((BluetoothAdapter.LeScanCallback) this.scanCallback);
+            Log.d(LOG_TAG, "stopScan - stop scanning");
+            this.scanner.stopScan(this.scanCallback);
         }
 
         this.devices.clear();
 
     }
 
-    private void onDeviceFound(android.bluetooth.BluetoothDevice device, int rssi, byte[] scanRecord) {
+    private void onDeviceFound(ScanResult result) {
 
-        final BluetoothDevice bluetoothDevice = new BluetoothDevice(device, rssi, scanRecord);
-
-        if (!this.filterAdresses.contains(bluetoothDevice.getAddress())) {
-            return;
-        }
+        final BluetoothDevice bluetoothDevice = new BluetoothDevice(
+                result.getDevice(),
+                result.getRssi(),
+                Objects.requireNonNull(result.getScanRecord()).getBytes()
+        );
 
         if (this.devices.add(bluetoothDevice)) {
+            Log.d(LOG_TAG, "onDeviceFound - Discovered new device: " + bluetoothDevice.getAddress());
             this.listener.onNewBluetoothDeviceDiscovered(bluetoothDevice);
+        } else {
+            Log.d(LOG_TAG, "onDeviceFound - Re-discovered device: " + bluetoothDevice.getAddress());
         }
+        this.devices.remove(bluetoothDevice);
+        this.devices.add(bluetoothDevice);
         this.listener.onBluetoothDeviceDiscovered(bluetoothDevice);
 
     }
 
     public interface OnBluetoothCoordinatorChange {
         void onScanStart();
+        void onScanFailed();
         void onBluetoothDeviceDiscovered(BluetoothDevice device);
         void onNewBluetoothDeviceDiscovered(BluetoothDevice device);
     }

@@ -10,5 +10,7 @@
     <dimen name="text_size_sm">14sp</dimen>
     <dimen name="title_size">24sp</dimen>
     <dimen name="device_select_icon_size">30dp</dimen>
+    <dimen name="device_select_icon_margin">4dp</dimen>
     <dimen name="dialog_icon_size">45dp</dimen>
+    <dimen name="text_size_xs">12sp</dimen>
 </resources>

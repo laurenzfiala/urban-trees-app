@@ -5,7 +5,9 @@ import java.util.Objects;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 
 /**
- * TODO
+ * Main class used for devices throughout the app.
+ * Holds important connection info and (optionally) a {@link Beacon}.
+ *
  * @author Laurenz Fiala
  * @since 2018/05/17
  */

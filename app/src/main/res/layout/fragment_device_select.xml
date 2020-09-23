@@ -33,7 +33,9 @@
                     android:layout_width="@dimen/device_select_icon_size"
                     android:layout_height="@dimen/device_select_icon_size"
                     android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/device_select_icon_margin"
                     android:layout_marginRight="@dimen/default_margin"
+                    android:layout_marginBottom="@dimen/device_select_icon_margin"
                     android:indeterminate="true" />
 
                 <TextView

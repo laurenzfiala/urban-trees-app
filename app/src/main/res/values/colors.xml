@@ -17,5 +17,6 @@
     <color name="colorTextSubtle">#818283</color>
 
     <color name="dividerColor">#CCCCCC</color>
+    <color name="deviceSelectPressedBg">#EDEDED</color>
 
 </resources>

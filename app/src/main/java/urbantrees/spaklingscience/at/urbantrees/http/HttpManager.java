@@ -6,14 +6,13 @@ import android.util.Log;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -21,8 +20,6 @@ import urbantrees.spaklingscience.at.urbantrees.activities.ApplicationProperties
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothDevice;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTCommand;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTLogEntry;
-import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTManager;
-import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTResponse;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.UARTResponseType;
 import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconReadoutResult;
@@ -80,11 +77,6 @@ public class HttpManager extends HasContext {
                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                     .readValue(res.getResponseValue(), Beacon[].class);
 
-            List<String> allowedBluetoothAdresses = new ArrayList<String>();
-            for (Beacon b : beacons) {
-                allowedBluetoothAdresses.add(b.getBluetoothAddress());
-            }
-
             callbackFn.call(null);
 
         } catch (Throwable t) {
@@ -124,8 +116,7 @@ public class HttpManager extends HasContext {
                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                     .readValue(res.getResponseValue(), BeaconSettings.class);
 
-            callbackFn
-                .call(settings);
+            callbackFn.call(settings);
 
         }catch (Throwable t) {
             Log.e(LOGGING_TAG, t.getMessage(), t);

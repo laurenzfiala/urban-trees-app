@@ -11,7 +11,7 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:id="@+id/imageView4"
+            android:id="@+id/device_icon"
             android:layout_width="@dimen/dialog_icon_size"
             android:layout_height="@dimen/dialog_icon_size"
             android:layout_marginEnd="@dimen/default_margin"

@@ -1,6 +1,5 @@
 package urbantrees.spaklingscience.at.urbantrees.http;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 

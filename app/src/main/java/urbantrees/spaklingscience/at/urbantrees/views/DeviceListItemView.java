@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -21,11 +22,16 @@ public class DeviceListItemView extends FrameLayout {
     private OnDeviceListItemInteractionListener listener;
 
     private BluetoothDevice device;
+    private TextView nameTextView;
+    private TextView annotationTextView;
+    private ImageView iconImageView;
 
     private static String namePrefix;
 
     public DeviceListItemView(Context context, OnDeviceListItemInteractionListener listener, BluetoothDevice device) {
         super(context);
+        this.setTag(device);
+
         this.listener = listener;
         this.device = device;
         if (namePrefix == null) {
@@ -33,15 +39,39 @@ public class DeviceListItemView extends FrameLayout {
         }
 
         View v = LayoutInflater.from(context).inflate(R.layout.view_device_select_list_item, this);
-        ((TextView) v.findViewById(R.id.device_name)).setText(namePrefix + " " + device.getBeacon().getDeviceId());
+        this.nameTextView = v.findViewById(R.id.device_name);
+        this.annotationTextView = v.findViewById(R.id.device_annotation);
+        this.iconImageView = v.findViewById(R.id.device_icon);
 
-        this.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                DeviceListItemView.this.listener.onListItemInteraction(DeviceListItemView.this.device);
-                return false;
-            }
-        });
+        this.update();
+    }
+
+    /**
+     * Update this item according to its members.
+     */
+    public void update() {
+
+        if (this.device.getBeacon() == null) {
+            this.nameTextView.setText(getResources().getString(R.string.search_devices_unknown_device));
+            this.annotationTextView.setText(device.getAddress());
+            this.annotationTextView.setVisibility(VISIBLE);
+            this.iconImageView.setImageAlpha(127);
+        } else {
+            this.nameTextView.setText(namePrefix + " " + this.device.getBeacon().getDeviceId());
+            this.annotationTextView.setVisibility(GONE);
+            this.iconImageView.setImageAlpha(255);
+            this.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    DeviceListItemView.this.listener.onListItemInteraction(DeviceListItemView.this.device);
+                }
+            });
+        }
+
+    }
+
+    public void setDevice(BluetoothDevice device) {
+        this.device = device;
     }
 
     public interface OnDeviceListItemInteractionListener {

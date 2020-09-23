@@ -6,6 +6,8 @@ import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +15,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import urbantrees.spaklingscience.at.urbantrees.views.DeviceListItemView;
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -31,11 +39,8 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     private OnDeviceSelectFragmentInteractionListener mListener;
 
-    private List<BluetoothDevice> displayDevices;
-
     // ----- UI -----
     private LinearLayout deviceListLayout;
-    private LinearLayout searchingDevicesLayout;
     private TextView searchingDevicesText;
 
     public static DeviceSelectFragment newInstance() {
@@ -45,7 +50,6 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.displayDevices = new ArrayList<>();
     }
 
     @Override
@@ -62,7 +66,6 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
         super.onViewCreated(view, savedInstanceState);
 
         this.deviceListLayout = getView().findViewById(R.id.device_list);
-        this.searchingDevicesLayout = getView().findViewById(R.id.searching_devices);
         this.searchingDevicesText = getView().findViewById(R.id.searching_devices_text);
 
         this.mListener.onDeviceSelectOpened();
@@ -71,9 +74,10 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     @Override
     public void onDestroy() {
+        this.mListener.onCloseDeviceSelect();
         super.onDestroy();
-        if (mListener != null) {
-            mListener.onDeviceSelectClosed();
+        if (this.mListener != null) {
+            this.mListener.onDeviceSelectClosed();
         }
     }
 
@@ -81,7 +85,7 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
     public void onAttach(Context context) {
         super.onAttach(context);
         if (context instanceof OnDeviceSelectFragmentInteractionListener) {
-            mListener = (OnDeviceSelectFragmentInteractionListener) context;
+            this.mListener = (OnDeviceSelectFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -94,10 +98,7 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
         mListener = null;
     }
 
-    public synchronized void addDevice(final BluetoothDevice device) {
-        if (this.getContext() == null) {
-            return;
-        }
+    public void addDevice(final BluetoothDevice device) {
 
         Handler h = new Handler(this.getContext().getMainLooper());
         h.post(new Runnable() {
@@ -106,15 +107,51 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
                 DeviceSelectFragment.this.deviceListLayout.addView(
                         new DeviceListItemView(
                                 DeviceSelectFragment.this.getContext(),
-                                DeviceSelectFragment.this, device
+                                DeviceSelectFragment.this,
+                                device
                         ),
-                        DeviceSelectFragment.this.displayDevices.size()-1
+                        deviceListLayout.getChildCount() - 1
                 );
                 DeviceSelectFragment.this.searchingDevicesText.setText(getResources().getString(R.string.search_devices_more));
             }
         });
 
-        this.displayDevices.add(device);
+
+    }
+
+    public void updateDevice(final BluetoothDevice device) {
+
+        Handler h = new Handler(this.getContext().getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                DeviceListItemView itemView = DeviceSelectFragment.this.deviceListLayout.findViewWithTag(device);
+                if (itemView == null) {
+                    Log.e(DeviceSelectFragment.TAG, "Tried to update a device view which did not yet exist: " + device);
+                    return;
+                }
+                itemView.setDevice(device);
+                itemView.update();
+            }
+        });
+
+    }
+
+    public void removeDevice(final BluetoothDevice device) {
+
+        Handler h = new Handler(this.getContext().getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                DeviceListItemView itemView = DeviceSelectFragment.this.deviceListLayout.findViewWithTag(device);
+                if (itemView == null) {
+                    Log.e(DeviceSelectFragment.TAG, "Tried to update a device view which did not yet exist: " + device);
+                    return;
+                }
+                DeviceSelectFragment.this.deviceListLayout.removeView(itemView);
+            }
+        });
+
     }
 
     @Override
@@ -124,6 +161,7 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public interface OnDeviceSelectFragmentInteractionListener {
         void onDeviceSelectOpened();
+        void onCloseDeviceSelect();
         void onDeviceSelectClosed();
         void onDeviceSelected(BluetoothDevice device);
     }

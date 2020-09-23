@@ -138,7 +138,6 @@ public class Dialogs {
 
     }
 
-    // TODO
     public static void dismissSnackbar() {
 
         if (activeSnackbar != null) {

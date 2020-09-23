@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO
+ * An UART command to be executed. Implemented in {@link UARTCommandType}.
  *
  * @author Laurenz Fiala
  * @since 2018/05/14

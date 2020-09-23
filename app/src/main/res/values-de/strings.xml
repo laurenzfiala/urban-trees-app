@@ -51,4 +51,7 @@
     <string name="action_send_again">Erneut senden</string>
     <string name="enable_location">Standort einschalten</string>
     <string name="enable_location_explanation_more">Ab Android 9 muss die Standortbestimmung beim Suchen nach Bluetooth-Geräten aktiviert sein. Durch den Standort von Bluetooth-Geräten kann indirekt Dein Standort bestimmt werden.</string>
+    <string name="search_devices_unknown_device">Unbekannter Beacon</string>
+    <string name="error_beacon_scan_title">Beacon-Suche fehlgeschlagen</string>
+    <string name="error_beacon_scan">Aus unbekannten Gründen konnte die Suche nach Beacons nicht gestartet werden.</string>
 </resources>

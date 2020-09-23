@@ -28,7 +28,6 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
     public static final String[]    NEEDED_PERMISSIONS = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
     };
 

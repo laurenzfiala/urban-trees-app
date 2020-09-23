@@ -13,7 +13,7 @@ public class TreeLight {
 	/**
 	 * Database identifier.
 	 */
-	private int id;
+	public int id;
 
 	public int getId() {
 		return id;
