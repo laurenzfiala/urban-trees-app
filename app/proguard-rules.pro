@@ -26,7 +26,7 @@
 -keep class org.codehaus.** { *; }
 -keepclassmembers public final enum org.codehaus.jackson.annotate.JsonAutoDetect$Visibility {
     public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *; }
--keep public class urbantrees.spaklingscience.at.urbantrees.entities.** {
+-keep public class urbantrees.spaklingscience.at.urbantrees.** {
     public void set*(***);
     public *** get*();
 }
