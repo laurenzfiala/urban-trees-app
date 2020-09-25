@@ -51,7 +51,9 @@ public class IntroActivity extends FragmentActivity {
 
         // Checking for first time launch - before calling setContentView()
         prefManager = new PreferenceManager(this);
-        if (!prefManager.isFirstLaunch()) {
+        if (!prefManager.isFirstLaunch() &&
+                (!prefManager.isTreeDataCollect() ||
+                IntroBluetoothPermissionFragment.isPermissionsGranted(this))) {
             launchHomeScreen();
             return;
         }

@@ -100,6 +100,9 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public void addDevice(final BluetoothDevice device) {
 
+        if (this.getContext() == null) {
+            return;
+        }
         Handler h = new Handler(this.getContext().getMainLooper());
         h.post(new Runnable() {
             @Override
@@ -121,6 +124,9 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public void updateDevice(final BluetoothDevice device) {
 
+        if (this.getContext() == null) {
+            return;
+        }
         Handler h = new Handler(this.getContext().getMainLooper());
         h.post(new Runnable() {
             @Override
@@ -139,6 +145,9 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public void removeDevice(final BluetoothDevice device) {
 
+        if (this.getContext() == null) {
+            return;
+        }
         Handler h = new Handler(this.getContext().getMainLooper());
         h.post(new Runnable() {
             @Override

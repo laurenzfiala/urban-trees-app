@@ -44,15 +44,15 @@ public class Utils {
      * Only request if not already requested.
      * Only applicable to android 6 and higher (api 23).
      */
-    @TargetApi(23)
-    public static void requestPermissions(Activity activity, Fragment context, final String[] requestPermissions, final int requestCode) {
+    @TargetApi(Build.VERSION_CODES.M)
+    public static void requestPermissions(Context context, Fragment caller, final String[] requestPermissions, final int requestCode) {
 
-        if(Build.VERSION.SDK_INT < 23) {
-            throw new RuntimeException("Tried to request permissions in android api lower than 23.");
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            throw new RuntimeException("Tried to request permissions in android api lower than " + Build.VERSION_CODES.M +".");
         }
 
-        if (!Utils.isPermissionsGranted(activity, requestPermissions)) {
-            context.requestPermissions(
+        if (!Utils.isPermissionsGranted(context, requestPermissions)) {
+            caller.requestPermissions(
                     requestPermissions,
                     requestCode
             );
@@ -61,7 +61,7 @@ public class Utils {
     }
 
     @TargetApi(23)
-    public static boolean isPermissionsGranted(Activity context, final String[] checkPermissions) {
+    public static boolean isPermissionsGranted(Context context, final String[] checkPermissions) {
         int granted = 0;
         for (String perm : checkPermissions) {
             if (context.checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED) {

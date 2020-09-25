@@ -16,7 +16,6 @@ import android.webkit.WebView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Properties;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -228,8 +227,8 @@ public class MainActivity extends AppCompatActivity
                                 MainActivity.this,
                                 new Status(
                                         R.drawable.error_internet_downstream,
-                                        R.string.error_beacon_list_fetch_title,
-                                        R.string.error_beacon_list_fetch,
+                                        getString(R.string.error_beacon_list_fetch_title),
+                                        getString(R.string.error_beacon_list_fetch),
                                         new StatusAction() {
                                             @Override
                                             public int getStringResource() {
@@ -340,8 +339,8 @@ public class MainActivity extends AppCompatActivity
                         MainActivity.this,
                         new Status(
                                 R.drawable.error_internet_downstream,
-                                R.string.error_beacon_settings_fetch_title,
-                                R.string.error_beacon_settings_fetch,
+                                getString(R.string.error_beacon_settings_fetch_title),
+                                getString(R.string.error_beacon_settings_fetch),
                                 new StatusAction() {
                                     @Override
                                     public int getStringResource() {
@@ -374,15 +373,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onScanFailed() {
+    public void onScanFailed(int errorCode) {
 
         Log.e(LOGGING_TAG, "Failed to start BLE scan.");
         Dialogs.statusDialog(
                 this,
                 new Status(
                         R.drawable.error_general,
-                        R.string.error_beacon_scan_title,
-                        R.string.error_beacon_scan,
+                        getString(R.string.error_beacon_scan_title),
+                        getResources().getString(R.string.error_beacon_scan) + errorCode,
                         new StatusAction() {
                             @Override
                             public int getStringResource() {
@@ -392,6 +391,7 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onAction(StatusActivity statusActivity) {
                                 statusActivity.finish();
+                                MainActivity.this.closeDeviceSelect();
                             }
                         },
                         new StatusAction() {
@@ -403,7 +403,7 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onAction(StatusActivity statusActivity) {
                                 statusActivity.finish();
-                                MainActivity.this.showDeviceSelect();
+                                MainActivity.this.bluetoothCoordinator.startScan();
                             }
                         }
                 )
@@ -548,8 +548,8 @@ public class MainActivity extends AppCompatActivity
                         MainActivity.this,
                         new Status(
                                 R.drawable.error_internet_upstream,
-                                R.string.error_beacon_data_send_title,
-                                R.string.error_beacon_data_send,
+                                getString(R.string.error_beacon_data_send_title),
+                                getString(R.string.error_beacon_data_send),
                                 new StatusAction() {
                                     @Override
                                     public int getStringResource() {
@@ -685,8 +685,8 @@ public class MainActivity extends AppCompatActivity
                     MainActivity.this,
                     new Status(
                             R.drawable.error_internet_upstream,
-                            R.string.error_connection_failed_title,
-                            R.string.error_connection_failed,
+                            getString(R.string.error_connection_failed_title),
+                            getString(R.string.error_connection_failed),
                             new StatusAction() {
                                 @Override
                                 public int getStringResource() {

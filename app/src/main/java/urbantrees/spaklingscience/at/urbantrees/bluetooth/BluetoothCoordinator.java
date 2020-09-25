@@ -1,5 +1,6 @@
 package urbantrees.spaklingscience.at.urbantrees.bluetooth;
 
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -38,7 +39,7 @@ public class BluetoothCoordinator {
     /**
      * Logging tag for this class.
      */
-    private static final String LOG_TAG = BluetoothCoordinator.class.getName();
+    private static final String     LOG_TAG = BluetoothCoordinator.class.getName();
 
     private Activity context;
     private OnBluetoothCoordinatorChange listener;
@@ -150,7 +151,7 @@ public class BluetoothCoordinator {
             public void onScanFailed(int errorCode) {
                 super.onScanFailed(errorCode);
                 Log.d(LOG_TAG, "onScanFailed - failed to start scan: error code " + errorCode);
-                BluetoothCoordinator.this.listener.onScanFailed();
+                BluetoothCoordinator.this.listener.onScanFailed(errorCode);
             }
         };
 
@@ -203,7 +204,7 @@ public class BluetoothCoordinator {
 
     public interface OnBluetoothCoordinatorChange {
         void onScanStart();
-        void onScanFailed();
+        void onScanFailed(int errorCode);
         void onBluetoothDeviceDiscovered(BluetoothDevice device);
         void onNewBluetoothDeviceDiscovered(BluetoothDevice device);
     }

@@ -55,6 +55,6 @@
     <string name="action_send_again">Send again</string>
     <string name="search_devices_unknown_device">Unknown beacon</string>
     <string name="error_beacon_scan_title">Scanning for beacons failed</string>
-    <string name="error_beacon_scan">For unknown reasons, beacon scanning could not be started.</string>
+    <string name="error_beacon_scan">"For unknown reasons, beacon scanning could not be started. Error code: "</string>
 
 </resources>

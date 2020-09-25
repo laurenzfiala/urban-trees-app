@@ -1,16 +1,17 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 import android.os.Bundle;
-import androidx.fragment.app.FragmentActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import androidx.fragment.app.FragmentActivity;
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.entities.Status;
 import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
@@ -37,7 +38,7 @@ public class StatusActivity extends FragmentActivity {
         this.actionLayout = this.findViewById(R.id.layout_actions);
 
         if (statuses.size() > 0) {
-            this.update(statuses.peek());
+            this.update(Objects.requireNonNull(statuses.peek()));
         }
 
     }
@@ -47,9 +48,9 @@ public class StatusActivity extends FragmentActivity {
 
     private void update(Status status) {
 
-        this.image.setImageDrawable(getResources().getDrawable(status.getImageResId())); // compat API 19
-        this.title.setText(getString(status.getTitleResId()));
-        this.text.setText(getString(status.getTextResId()));
+        this.image.setImageResource(status.getImageResId());
+        this.title.setText(status.getTitle());
+        this.text.setText(status.getText());
 
         this.actionLayout.removeAllViews();
 

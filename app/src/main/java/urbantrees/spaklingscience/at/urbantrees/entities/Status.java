@@ -8,14 +8,14 @@ import java.util.List;
 public class Status implements Serializable {
 
     private int imageResId;
-    private int titleResId;
-    private int textResId;
+    private String title;
+    private String text;
     private List<StatusAction> actions = new ArrayList<>();
 
-    public Status(int imageResId, int titleResId, int textResId, StatusAction... actions) {
+    public Status(int imageResId, String title, String text, StatusAction... actions) {
         this.imageResId = imageResId;
-        this.titleResId = titleResId;
-        this.textResId = textResId;
+        this.title = title;
+        this.text = text;
         if (actions != null && actions.length > 0) {
             Collections.addAll(this.actions, actions);
         }
@@ -29,12 +29,12 @@ public class Status implements Serializable {
         return imageResId;
     }
 
-    public int getTitleResId() {
-        return titleResId;
+    public String getTitle() {
+        return title;
     }
 
-    public int getTextResId() {
-        return textResId;
+    public String getText() {
+        return text;
     }
 
     public List<StatusAction> getActions() {

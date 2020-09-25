@@ -1,6 +1,7 @@
 package urbantrees.spaklingscience.at.urbantrees.fragments;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -28,6 +29,7 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
     public static final String[]    NEEDED_PERMISSIONS = new String[]{
             Manifest.permission.BLUETOOTH,
             Manifest.permission.BLUETOOTH_ADMIN,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
     };
 
@@ -49,7 +51,7 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
                 container, false);
 
         this.permissionsGrantedToggle = (Switch) view.findViewById(R.id.intro_bluetooth_permission_toggle);
-        if (this.isPermissionsGranted()) {
+        if (isPermissionsGranted(this.getActivity())) {
             this.permissionsGrantedToggle.setChecked(true);
             this.permissionsGrantedToggle.setEnabled(false);
         } else {
@@ -84,10 +86,6 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
         }
     }
 
-    public boolean isPermissionsGranted() {
-        return Utils.isPermissionsGranted(this.getActivity(), NEEDED_PERMISSIONS);
-    }
-
     @Override
     public void onRequestFailed() {
         this.permissionsGrantedToggle.setChecked(false);
@@ -107,7 +105,7 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
     public void onResume() {
         super.onResume();
 
-        this.permissionsGrantedToggle.setChecked(this.isPermissionsGranted());
+        this.permissionsGrantedToggle.setChecked(isPermissionsGranted(this.getActivity()));
     }
 
     @Override
@@ -116,6 +114,15 @@ public class IntroBluetoothPermissionFragment extends IntroGenericFragment imple
             return false;
         }
         return this.permissionsGrantedToggle.isChecked();
+    }
+
+    /**
+     * Check if the permissions needed for bluetooth handling are granted.
+     * @param context caller
+     * @return true if granted; false otherwise
+     */
+    public static boolean isPermissionsGranted(Context context) {
+        return Utils.isPermissionsGranted(context, NEEDED_PERMISSIONS);
     }
 
 }
