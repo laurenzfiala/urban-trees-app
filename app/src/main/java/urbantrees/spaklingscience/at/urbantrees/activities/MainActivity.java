@@ -16,6 +16,7 @@ import android.webkit.WebView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -132,17 +133,23 @@ public class MainActivity extends AppCompatActivity
 
         this.props = new Properties();
 
-        String propertyFile = "config-prod.properties";
+        String propertyFile = "config-prod";
         if (BuildConfig.DEBUG) {
-            propertyFile = "config.properties";
+            propertyFile = "config";
         }
 
-        try {
-            this.props.load(this.getClass().getResourceAsStream("/assets/" + propertyFile));
+        try (InputStream is1 = this.getPropertiesFile(propertyFile);
+             InputStream is2 = this.getPropertiesFile(propertyFile + "-confidential")) {
+            this.props.load(is1);
+            this.props.load(is2);
         } catch (IOException e) {
             Log.e(LOGGING_TAG, "Could not load config: " + e.getMessage(), e);
         }
 
+    }
+
+    private InputStream getPropertiesFile(String filename) {
+        return this.getClass().getResourceAsStream("/assets/" + filename + ".properties");
     }
 
     /**
