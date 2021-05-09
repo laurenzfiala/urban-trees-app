@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -154,7 +155,10 @@ public class HttpManager extends HasContext {
             long timeSinceDataReadoutMs = System.currentTimeMillis() - device.getDataReadoutTime();
             BeaconReadoutResult result = new BeaconReadoutResult(logs, settings, timeSinceDataReadoutMs);
 
-            DateFormat df = new SimpleDateFormat(this.props.getProperty("date.format"));
+            DateFormat df = new SimpleDateFormat(
+                    this.props.getProperty("date.format"),
+                    Locale.US
+            );
             df.setTimeZone(TimeZone.getTimeZone("UTC"));
             String payload = new ObjectMapper()
                     .setDateFormat(df)

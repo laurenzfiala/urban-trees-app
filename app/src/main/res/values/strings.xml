@@ -32,7 +32,9 @@
     <string name="intro_bluetooth_permission_request_button">Allow Bluetooth &amp; Location</string>
 
     <!-- BEACON SEARCH DIALOG -->
-    <string name="search_devices_more">Searching more Beacons...</string>
+    <string name="load_device_list">Loading info about the beacons...</string>
+    <string name="search_devices">Searching beacons...</string>
+    <string name="search_devices_more">Searching more beacons...</string>
     <string name="search_devices_prefix">Beacon</string>
     <string name="comm_device_get_settings">Receiving connection parameters</string>
     <string name="comm_device_connecting">Connecting to beacon</string>

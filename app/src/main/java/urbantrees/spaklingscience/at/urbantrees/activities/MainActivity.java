@@ -1,10 +1,12 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
@@ -19,7 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import urbantrees.spaklingscience.at.urbantrees.BuildConfig;
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -75,8 +80,6 @@ public class MainActivity extends AppCompatActivity
     // ----- UI -----
     private WebView webView;
     private FloatingActionButton fab;
-    private DeviceSelectFragment deviceSelectFragment;
-    private StatusBottomSheetFragment statusFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -178,6 +181,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onAttachFragment(@NonNull Fragment fragment) {
+        super.onAttachFragment(fragment);
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
@@ -209,6 +217,7 @@ public class MainActivity extends AppCompatActivity
     public void onDeviceSelectOpened() {
 
         Log.d(MainActivity.LOGGING_TAG, "onFragmentOpened - Start bluetooth scanning");
+        this.getDeviceSelectFragment().onLoadDeviceList();
 
         Runnable r = new Runnable() {
             @Override
@@ -224,6 +233,13 @@ public class MainActivity extends AppCompatActivity
                                 return null;
                             }
                         };
+                        Handler h = new Handler(getMainLooper());
+                        h.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                getDeviceSelectFragment().onSearchDevices();
+                            }
+                        });
                         r.execute();
                     }
 
@@ -294,14 +310,15 @@ public class MainActivity extends AppCompatActivity
                 }
         );
 
-        this.deviceSelectFragment = DeviceSelectFragment.newInstance();
-        this.deviceSelectFragment.show(getSupportFragmentManager().beginTransaction(), DeviceSelectFragment.TAG);
+        DeviceSelectFragment
+                .newInstance()
+                .show(getSupportFragmentManager().beginTransaction(), DeviceSelectFragment.TAG);
 
     }
 
     public void closeDeviceSelect() {
         Log.d(MainActivity.LOGGING_TAG, "closeFragment - Close device select dialog fragment");
-        this.deviceSelectFragment.dismissAllowingStateLoss();
+        this.getDeviceSelectFragment().dismissAllowingStateLoss();
     }
 
     @Override
@@ -325,11 +342,15 @@ public class MainActivity extends AppCompatActivity
             this.uartManager = new UARTManager(this, this, this.bluetoothCoordinator, this);
         }
 
-        this.statusFragment = StatusBottomSheetFragment.newInstance();
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.status_container, this.statusFragment, StatusBottomSheetFragment.TAG).commit();
-        this.statusFragment.setStatus(R.string.comm_device_get_settings);
-        this.statusFragment.setProgress(10);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(
+                        R.id.status_container,
+                        StatusBottomSheetFragment.newInstance(),
+                        StatusBottomSheetFragment.TAG)
+                .commitNow();
+        this.getStatusFragment().setStatus(R.string.comm_device_get_settings);
+        this.getStatusFragment().setProgress(10);
         BeaconLogger.debug(device, "Device was selected. Receiving connection parameters.");
 
         this.httpManager.getBeaconSettings(device.getBeacon().getId(), new Callback<BeaconSettings>() {
@@ -426,7 +447,7 @@ public class MainActivity extends AppCompatActivity
             BeaconLogger.trace(device, "Re-discovered known beacon: " + device);
         }
 
-        this.deviceSelectFragment.updateDevice(device);
+        this.getDeviceSelectFragment().updateDevice(device);
 
     }
 
@@ -438,7 +459,7 @@ public class MainActivity extends AppCompatActivity
             BeaconLogger.trace(device, "Discovered known beacon: " + device);
         }
 
-        this.deviceSelectFragment.addDevice(device);
+        this.getDeviceSelectFragment().addDevice(device);
 
     }
 
@@ -459,15 +480,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDeviceConnecting() {
-        this.statusFragment.setStatus(R.string.comm_device_connecting);
-        this.statusFragment.setProgress(20);
+        this.getStatusFragment().setStatus(R.string.comm_device_connecting);
+        this.getStatusFragment().setProgress(20);
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Connecting to beacon.");
     }
 
     @Override
     public void onDeviceConnected() {
-        this.statusFragment.setStatus(R.string.comm_device_connected);
-        this.statusFragment.setProgress(25);
+        this.getStatusFragment().setStatus(R.string.comm_device_connected);
+        this.getStatusFragment().setProgress(25);
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Successfully connected to beacon.");
     }
 
@@ -481,7 +502,7 @@ public class MainActivity extends AppCompatActivity
         if (cancelled) {
             return;
         }
-        this.statusFragment.setStatus(R.string.comm_device_get_data);
+        this.getStatusFragment().setStatus(R.string.comm_device_get_data);
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Receiving data from beacon. Executing command: " + command);
     }
 
@@ -491,8 +512,8 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         final int commandExecProgressAmount = 70;
-        this.statusFragment.setProgress(
-                (int) (this.statusFragment.getProgress() + ((float) commandExecProgressAmount / (float) totalCommandAmount))
+        this.getStatusFragment().setProgress(
+                (int) (this.getStatusFragment().getProgress() + ((float) commandExecProgressAmount / (float) totalCommandAmount))
         );
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Received data from beacon. Executed command: " + command);
     }
@@ -500,8 +521,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDeviceExecuted(final BluetoothDevice device) {
 
-        this.statusFragment.setProgress(90);
-        this.statusFragment.setStatus(R.string.comm_device_send_data);
+        this.getStatusFragment().setProgress(90);
+        this.getStatusFragment().setStatus(R.string.comm_device_send_data);
         BeaconLogger.trace(device, "Data successfully received. Sending to backend.");
 
         try {
@@ -527,7 +548,7 @@ public class MainActivity extends AppCompatActivity
             public void call(Void v) {
                 Log.i(LOGGING_TAG, "Successfully sent beacon readout result to server");
                 BeaconLogger.debug(device, "Data successfully sent to backend.");
-                statusFragment.setProgress(95);
+                getStatusFragment().setProgress(95);
 
                 Handler h = new Handler(MainActivity.this.getMainLooper());
                 Runnable r = new Runnable() {
@@ -535,15 +556,15 @@ public class MainActivity extends AppCompatActivity
                     public void run() {
                         FragmentManager fm = getSupportFragmentManager();
                         if (!fm.isDestroyed() && !fm.isStateSaved()) {
-                            getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
+                            getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .remove(getStatusFragment())
+                                    .commitNow();
                         }
                         redirectAfterBeacon(device);
                     }
                 };
                 h.post(r);
-
-                getSupportFragmentManager().beginTransaction().remove(statusFragment).commit();
-                redirectAfterBeacon(device);
 
             }
 
@@ -591,14 +612,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDeviceCancel(BluetoothDevice device) {
-        this.statusFragment.setStatus(R.string.comm_device_cencelling);
-        this.statusFragment.setIndeterminate();
+        this.getStatusFragment().setStatus(R.string.comm_device_cencelling);
+        this.getStatusFragment().setIndeterminate();
     }
 
     @Override
     public void onDeviceCancelled(BluetoothDevice device) {
-        getSupportFragmentManager().beginTransaction()
-                .remove(this.statusFragment).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .remove(this.getStatusFragment())
+                .commitNow();
 
         Handler handler = new Handler(MainActivity.this.getMainLooper());
         Runnable runnable = new Runnable() {
@@ -725,13 +748,23 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showSearchControls() {
-        if (this.getBooleanProperty("fab.show") && this.prefManager.isTreeDataCollect()) {
+        if (this.getBooleanProperty("fab.show") &&
+                this.prefManager.isTreeDataCollect() &&
+                this.getStatusFragment() == null) {
             this.fab.setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void onWebviewResouceLoaded() {
+    }
+
+    private DeviceSelectFragment getDeviceSelectFragment() {
+        return (DeviceSelectFragment) getSupportFragmentManager().findFragmentByTag(DeviceSelectFragment.TAG);
+    }
+
+    private StatusBottomSheetFragment getStatusFragment() {
+        return (StatusBottomSheetFragment) getSupportFragmentManager().findFragmentByTag(StatusBottomSheetFragment.TAG);
     }
 
 }

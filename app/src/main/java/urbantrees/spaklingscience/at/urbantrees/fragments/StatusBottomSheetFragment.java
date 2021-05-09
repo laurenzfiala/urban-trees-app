@@ -6,6 +6,8 @@ import android.os.Handler;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +46,22 @@ public class StatusBottomSheetFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+
+        if (savedInstanceState != null) {
+            this.statusResId = savedInstanceState.getInt("statusResId");
+            this.status = savedInstanceState.getString("status");
+            this.progress = savedInstanceState.getInt("progress");
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putInt("statusResId", this.statusResId);
+        outState.putString("status", this.status);
+        outState.putInt("progress", this.progress);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -118,7 +136,6 @@ public class StatusBottomSheetFragment extends Fragment {
             }
         };
         mainHandler.post(updateRunnable);
-
 
     }
 

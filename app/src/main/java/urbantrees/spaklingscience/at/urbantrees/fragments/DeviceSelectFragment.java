@@ -15,13 +15,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import urbantrees.spaklingscience.at.urbantrees.views.DeviceListItemView;
 import urbantrees.spaklingscience.at.urbantrees.R;
@@ -39,9 +32,20 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     private OnDeviceSelectFragmentInteractionListener mListener;
 
+    /**
+     * Holds all devices to show currently.
+     */
+    private ArrayList<BluetoothDevice> devices = new ArrayList<>();
+
+    /**
+     * State this device select is currently in.
+     * Used to display correct info to users.
+     */
+    private State state;
+
     // ----- UI -----
     private LinearLayout deviceListLayout;
-    private TextView searchingDevicesText;
+    private TextView progressText;
 
     public static DeviceSelectFragment newInstance() {
         return new DeviceSelectFragment();
@@ -50,10 +54,13 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {}
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -66,9 +73,14 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
         super.onViewCreated(view, savedInstanceState);
 
         this.deviceListLayout = getView().findViewById(R.id.device_list);
-        this.searchingDevicesText = getView().findViewById(R.id.searching_devices_text);
+        this.progressText = getView().findViewById(R.id.progress_text);
 
         this.mListener.onDeviceSelectOpened();
+
+        // re-add devices (if any were restored)
+        for (BluetoothDevice d : this.devices) {
+            this.addDevice(d);
+        }
 
     }
 
@@ -100,6 +112,8 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public void addDevice(final BluetoothDevice device) {
 
+        this.devices.add(device);
+
         if (this.getContext() == null) {
             return;
         }
@@ -115,7 +129,7 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
                         ),
                         deviceListLayout.getChildCount() - 1
                 );
-                DeviceSelectFragment.this.searchingDevicesText.setText(getResources().getString(R.string.search_devices_more));
+                DeviceSelectFragment.this.progressText.setText(R.string.search_devices_more);
             }
         });
 
@@ -123,6 +137,8 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
     }
 
     public void updateDevice(final BluetoothDevice device) {
+
+        this.devices.set(this.devices.indexOf(device), device);
 
         if (this.getContext() == null) {
             return;
@@ -145,6 +161,8 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     public void removeDevice(final BluetoothDevice device) {
 
+        this.devices.remove(device);
+
         if (this.getContext() == null) {
             return;
         }
@@ -163,6 +181,14 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
 
     }
 
+    public void onLoadDeviceList() {
+        this.progressText.setText(R.string.load_device_list);
+    }
+
+    public void onSearchDevices() {
+        this.progressText.setText(R.string.search_devices);
+    }
+
     @Override
     public void onListItemInteraction(BluetoothDevice device) {
         this.mListener.onDeviceSelected(device);
@@ -173,5 +199,13 @@ public class DeviceSelectFragment extends DialogFragment implements DeviceListIt
         void onCloseDeviceSelect();
         void onDeviceSelectClosed();
         void onDeviceSelected(BluetoothDevice device);
+    }
+
+    /**
+     * @see #state
+     */
+    public enum State {
+        LOAD_DEVICE_LIST,
+        SEARCHING_DEVICES
     }
 }

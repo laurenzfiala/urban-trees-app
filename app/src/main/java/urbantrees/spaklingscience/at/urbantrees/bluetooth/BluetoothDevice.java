@@ -88,4 +88,5 @@ public class BluetoothDevice {
     public String toString() {
         return this.getAddress() + " / " + this.getNativeDevice().getName();
     }
+
 }
