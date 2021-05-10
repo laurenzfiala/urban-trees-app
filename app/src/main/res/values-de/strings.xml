@@ -38,7 +38,7 @@
     <string name="comm_device_connected">Erfolgreich mit Beacon verbunden</string>
     <string name="comm_device_get_data">Empfange Daten von Beacon</string>
     <string name="comm_device_send_data">Sende Beacon-Daten</string>
-    <string name="comm_device_cencelling">Breche Verbindung zu Beacon ab...</string>
+    <string name="comm_device_cancelling">Breche Verbindung zu Beacon ab...</string>
 
     <!-- WEBVIEW -->
     <string name="webview_resource_failed">Die Website konnte nicht erreicht werden, bitte versuche es erneut oder schließe die App.</string>

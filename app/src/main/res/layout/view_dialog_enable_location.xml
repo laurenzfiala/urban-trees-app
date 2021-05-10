@@ -26,7 +26,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginBottom="@dimen/small_margin"
                 android:paddingTop="2dp"
                 android:text="@string/enable_location_explanation"
                 android:textColor="@color/colorText"
@@ -36,9 +35,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginTop="@dimen/small_margin"
                 android:text="@string/enable_location_explanation_more"
                 android:textColor="@color/colorTextSubtle"
-                android:textSize="@dimen/text_size_sm" />
+                android:textSize="@dimen/text_size_sm"
+                android:visibility="gone" />
         </LinearLayout>
 
     </LinearLayout>

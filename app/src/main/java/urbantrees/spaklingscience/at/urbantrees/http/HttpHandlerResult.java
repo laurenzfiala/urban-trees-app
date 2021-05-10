@@ -29,7 +29,7 @@ public class HttpHandlerResult {
     }
 
     public static void isSuccessfulElseThrow(HttpHandlerResult result) throws Exception {
-        if(!result.isSuccessful()) {
+        if(result == null || !result.isSuccessful()) {
             throw new Exception("Response status of http call was not 200.");
         }
     }

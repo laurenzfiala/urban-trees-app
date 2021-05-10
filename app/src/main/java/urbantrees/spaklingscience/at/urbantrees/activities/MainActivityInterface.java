@@ -13,8 +13,8 @@ public interface MainActivityInterface {
 
     void loadInitialPage();
     void onWebviewError(WebResourceRequest request, WebResourceError error);
-    void onWebviewPageFinished();
-    void showSearchControls();
+    void onWebviewPageFinished(final String url);
+    void updateSearchControls();
     void onWebviewResouceLoaded();
     void startActivityForResult(Intent intent, int resultCode);
 

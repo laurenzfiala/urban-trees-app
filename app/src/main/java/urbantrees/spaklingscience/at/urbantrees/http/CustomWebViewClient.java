@@ -2,10 +2,10 @@ package urbantrees.spaklingscience.at.urbantrees.http;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -26,6 +26,12 @@ public class CustomWebViewClient extends WebViewClient {
      * All other URLs will be loaded in the default browser.
      */
     private String[] allowedSiteUrls;
+
+    /**
+     * Whether the webview is currently loading a page or not.
+     * Used to avoid multiple calls of {@link #onPageFinished(WebView, String)}.
+     */
+    private boolean pageStarted = false;
 
     public CustomWebViewClient(MainActivityInterface mainActivity,
                                Context context,
@@ -51,18 +57,26 @@ public class CustomWebViewClient extends WebViewClient {
     }
 
     @Override
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        super.onPageStarted(view, url, favicon);
+        this.pageStarted = true;
+    }
+
+    @Override
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
-        this.mainActivity.onWebviewPageFinished();
-        this.mainActivity.showSearchControls();
+        if (this.pageStarted) {
+            this.mainActivity.onWebviewPageFinished(url);
+            this.mainActivity.updateSearchControls();
+        }
+        this.pageStarted = false;
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
         for (String s : this.allowedSiteUrls) {
             if (url.startsWith(s)) {
-                view.loadUrl(url);
-                return true;
+                return false;
             }
         }
         this.context.startActivity(

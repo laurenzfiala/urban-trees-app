@@ -1,12 +1,10 @@
 package urbantrees.spaklingscience.at.urbantrees.activities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.webkit.ValueCallback;
@@ -20,12 +18,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Stack;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import urbantrees.spaklingscience.at.urbantrees.BuildConfig;
 import urbantrees.spaklingscience.at.urbantrees.R;
 import urbantrees.spaklingscience.at.urbantrees.bluetooth.BluetoothCoordinator;
@@ -40,8 +37,9 @@ import urbantrees.spaklingscience.at.urbantrees.entities.Beacon;
 import urbantrees.spaklingscience.at.urbantrees.entities.BeaconSettings;
 import urbantrees.spaklingscience.at.urbantrees.entities.Status;
 import urbantrees.spaklingscience.at.urbantrees.entities.StatusAction;
+import urbantrees.spaklingscience.at.urbantrees.entities.TransferState;
+import urbantrees.spaklingscience.at.urbantrees.entities.TransferStatus;
 import urbantrees.spaklingscience.at.urbantrees.fragments.DeviceSelectFragment;
-import urbantrees.spaklingscience.at.urbantrees.fragments.StatusBottomSheetFragment;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebChromeClient;
 import urbantrees.spaklingscience.at.urbantrees.http.CustomWebViewClient;
 import urbantrees.spaklingscience.at.urbantrees.http.HttpManager;
@@ -49,6 +47,8 @@ import urbantrees.spaklingscience.at.urbantrees.util.BeaconLogger;
 import urbantrees.spaklingscience.at.urbantrees.util.Callback;
 import urbantrees.spaklingscience.at.urbantrees.util.Dialogs;
 import urbantrees.spaklingscience.at.urbantrees.util.PreferenceManager;
+import urbantrees.spaklingscience.at.urbantrees.util.TransferJSInterface;
+import urbantrees.spaklingscience.at.urbantrees.util.TransferJSListener;
 import urbantrees.spaklingscience.at.urbantrees.util.Utils;
 
 import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResultCode.FILECHOOSER_RESULT_CODE;
@@ -58,7 +58,7 @@ import static urbantrees.spaklingscience.at.urbantrees.activities.ActivityResult
 
 public class MainActivity extends AppCompatActivity
         implements DeviceSelectFragment.OnDeviceSelectFragmentInteractionListener,
-        StatusBottomSheetFragment.OnStatusBottomSheetInteractionListener,
+        TransferJSListener,
         BluetoothCoordinator.OnBluetoothCoordinatorChange,
         UARTManager.OnUARTManagerStatusChange,
         ApplicationProperties,
@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity
     private HttpManager httpManager;
     private Properties props;
     private PreferenceManager prefManager;
+    private BluetoothDevice selectedDevice;
+    private Stack<TransferState> states;
 
     // ----- WEBVIEW -----
     private CustomWebViewClient webViewClient;
@@ -117,11 +119,14 @@ public class MainActivity extends AppCompatActivity
         this.webChromeClient = new CustomWebChromeClient(this);
 
         this.webView = (WebView) findViewById(R.id.web_view);
+        this.webView.getSettings().setAppCacheEnabled(true);
         this.webView.getSettings().setJavaScriptEnabled(true);
         this.webView.getSettings().setDomStorageEnabled(true);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
         this.webView.setWebViewClient(this.webViewClient);
         this.webView.setWebChromeClient(this.webChromeClient);
+
+        this.webView.addJavascriptInterface(new TransferJSInterface(this), TransferJSInterface.name());
 
     }
 
@@ -342,22 +347,22 @@ public class MainActivity extends AppCompatActivity
             this.uartManager = new UARTManager(this, this, this.bluetoothCoordinator, this);
         }
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(
-                        R.id.status_container,
-                        StatusBottomSheetFragment.newInstance(),
-                        StatusBottomSheetFragment.TAG)
-                .commitNow();
-        this.getStatusFragment().setStatus(R.string.comm_device_get_settings);
-        this.getStatusFragment().setProgress(10);
         BeaconLogger.debug(device, "Device was selected. Receiving connection parameters.");
+        this.states = new Stack<>();
+        this.selectedDevice = device;
+        this.updateStatus(new TransferState(TransferStatus.PREPARE_READOUT));
 
-        this.httpManager.getBeaconSettings(device.getBeacon().getId(), new Callback<BeaconSettings>() {
+        this.webView.loadUrl(this.getProperty("beacontransfer.load.address", device.getBeacon().getId()));
+
+    }
+
+    private void startTransfer() {
+
+        this.httpManager.getBeaconSettings(this.selectedDevice.getBeacon().getId(), new Callback<BeaconSettings>() {
             @Override
             public void call(BeaconSettings beaconSettings) {
-                device.getBeacon().setSettings(beaconSettings);
-                MainActivity.this.uartManager.start(device);
+                selectedDevice.getBeacon().setSettings(beaconSettings);
+                MainActivity.this.uartManager.start(selectedDevice);
             }
 
             @Override
@@ -377,7 +382,7 @@ public class MainActivity extends AppCompatActivity
 
                                     @Override
                                     public void onAction(StatusActivity statusActivity) {
-                                        MainActivity.this.onDeviceSelected(device);
+                                        MainActivity.this.onDeviceSelected(selectedDevice);
                                         statusActivity.finish();
                                     }
                                 }
@@ -389,16 +394,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onStatusCancelled() {
+    public void onUserCancel() {
         this.uartManager.stop(true);
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Cancelling beacon connection...");
         BeaconLogger.send(this);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_CANCELLING));
     }
 
     @Override
-    public void onScanStart() {
-        // not in use
-    }
+    public void onScanStart() {}
 
     @Override
     public void onScanFailed(int errorCode) {
@@ -447,7 +451,9 @@ public class MainActivity extends AppCompatActivity
             BeaconLogger.trace(device, "Re-discovered known beacon: " + device);
         }
 
-        this.getDeviceSelectFragment().updateDevice(device);
+        if (this.getDeviceSelectFragment() != null) {
+            this.getDeviceSelectFragment().updateDevice(device);
+        }
 
     }
 
@@ -459,7 +465,9 @@ public class MainActivity extends AppCompatActivity
             BeaconLogger.trace(device, "Discovered known beacon: " + device);
         }
 
-        this.getDeviceSelectFragment().addDevice(device);
+        if (this.getDeviceSelectFragment() != null) {
+            this.getDeviceSelectFragment().addDevice(device);
+        }
 
     }
 
@@ -480,29 +488,25 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDeviceConnecting() {
-        this.getStatusFragment().setStatus(R.string.comm_device_connecting);
-        this.getStatusFragment().setProgress(20);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_CONNECTING, 20));
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Connecting to beacon.");
     }
 
     @Override
     public void onDeviceConnected() {
-        this.getStatusFragment().setStatus(R.string.comm_device_connected);
-        this.getStatusFragment().setProgress(25);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_CONNECTED, 25));
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Successfully connected to beacon.");
     }
 
     @Override
-    public void onDeviceDisconnected(boolean isSuccessful) {
-        // not used
-    }
+    public void onDeviceDisconnected(boolean isSuccessful) {}
 
     @Override
     public void onDeviceCommandExecutionStart(boolean cancelled, int totalCommandAmount, int currentCommandPosition, UARTCommand command) {
         if (cancelled) {
             return;
         }
-        this.getStatusFragment().setStatus(R.string.comm_device_get_data);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_GET_DATA));
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Receiving data from beacon. Executing command: " + command);
     }
 
@@ -512,17 +516,18 @@ public class MainActivity extends AppCompatActivity
             return;
         }
         final int commandExecProgressAmount = 70;
-        this.getStatusFragment().setProgress(
-                (int) (this.getStatusFragment().getProgress() + ((float) commandExecProgressAmount / (float) totalCommandAmount))
-        );
+        this.updateStatus(new TransferState(
+                TransferStatus.COMM_DEVICE_GET_DATA,
+                (int) (this.getCurrentState().getProgress() + ((float) commandExecProgressAmount / (float) totalCommandAmount))
+        ));
         BeaconLogger.trace(this.uartManager.getCurrentDevice(), "Received data from beacon. Executed command: " + command);
     }
 
     @Override
     public void onDeviceExecuted(final BluetoothDevice device) {
 
-        this.getStatusFragment().setProgress(90);
-        this.getStatusFragment().setStatus(R.string.comm_device_send_data);
+
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_SEND_DATA, 90));
         BeaconLogger.trace(device, "Data successfully received. Sending to backend.");
 
         try {
@@ -548,19 +553,12 @@ public class MainActivity extends AppCompatActivity
             public void call(Void v) {
                 Log.i(LOGGING_TAG, "Successfully sent beacon readout result to server");
                 BeaconLogger.debug(device, "Data successfully sent to backend.");
-                getStatusFragment().setProgress(95);
+                updateStatus(new TransferState(TransferStatus.COMM_DEVICE_SEND_DATA, 95));
 
                 Handler h = new Handler(MainActivity.this.getMainLooper());
                 Runnable r = new Runnable() {
                     @Override
                     public void run() {
-                        FragmentManager fm = getSupportFragmentManager();
-                        if (!fm.isDestroyed() && !fm.isStateSaved()) {
-                            getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .remove(getStatusFragment())
-                                    .commitNow();
-                        }
                         redirectAfterBeacon(device);
                     }
                 };
@@ -572,6 +570,7 @@ public class MainActivity extends AppCompatActivity
             public void error(Throwable t) {
                 Log.e(LOGGING_TAG, "Failed to send beacon info: " + t.getMessage(), t);
                 BeaconLogger.error(device, "Data could not be sent to backend: " + t.getMessage());
+                updateStatus(new TransferState(TransferStatus.COMM_DEVICE_SEND_DATA_FAILED));
                 Dialogs.statusDialog(
                         MainActivity.this,
                         new Status(
@@ -612,69 +611,35 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDeviceCancel(BluetoothDevice device) {
-        this.getStatusFragment().setStatus(R.string.comm_device_cencelling);
-        this.getStatusFragment().setIndeterminate();
     }
 
     @Override
     public void onDeviceCancelled(BluetoothDevice device) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .remove(this.getStatusFragment())
-                .commitNow();
+        // we are only interested in graceful stops
+        if (device != null) {
+            this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_CANCELLED));
+        }
 
-        Handler handler = new Handler(MainActivity.this.getMainLooper());
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                MainActivity.this.fab.setVisibility(View.VISIBLE);
-            }
-        };
-        handler.post(runnable);
+        this.updateSearchControls();
     }
 
     @Override
     public void onDeviceExecutionFailed(final BluetoothDevice device) {
 
         BeaconLogger.send(this);
-
         this.uartManager.stop(false);
 
-        Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
-        Runnable redirectRunnable = new Runnable() {
-            @Override
-            public void run() {
-                MainActivity.this.showSearchControls();
-                MainActivity.this.webView.loadUrl(
-                        MainActivity.this.getProperty(
-                                "beacontransfer.load.address.failed",
-                                device.getBeacon().getId()
-                        )
-                );
-            }
-        };
-        mainHandler.post(redirectRunnable);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_GET_DATA_FAILED, 10));
+        this.updateSearchControls();
     }
 
     private void redirectAfterBeacon(final BluetoothDevice device) {
 
         BeaconLogger.send(this);
 
-        Handler mainHandler = new Handler(this.getMainLooper());
-        Runnable redirectRunnable = new Runnable() {
-            @Override
-            public void run() {
-                MainActivity.this.showSearchControls();
-                final String url = MainActivity.this.getProperty(
-                        "beacontransfer.load.address",
-                        device.getBeacon().getId(),
-                        MainActivity.this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue().length
-                );
-                Log.d(LOGGING_TAG, "Loading success page: " + url);
-                MainActivity.this.webView.loadUrl(url);
-            }
-        };
-        mainHandler.post(redirectRunnable);
+        this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_READOUT_FINISHED, 100));
+        this.updateTransferStats();
+        this.updateSearchControls();
 
     }
 
@@ -735,7 +700,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onWebviewPageFinished() {
+    public void onWebviewPageFinished(final String url) {
         this.webView.evaluateJavascript(
                 "localStorage.setItem('"
                         + this.getProperty("api.key.localStorage.key")
@@ -744,15 +709,32 @@ public class MainActivity extends AppCompatActivity
                         + "'); refreshLogin();",
                 null
         );
+
+        if (this.getCurrentState().getStatus() == TransferStatus.PREPARE_READOUT &&
+            url.equals(this.getProperty("beacontransfer.load.address", this.selectedDevice.getBeacon().getId()))) {
+            this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_GET_SETTINGS, 10));
+            this.startTransfer();
+        }
     }
 
     @Override
-    public void showSearchControls() {
-        if (this.getBooleanProperty("fab.show") &&
-                this.prefManager.isTreeDataCollect() &&
-                this.getStatusFragment() == null) {
-            this.fab.setVisibility(View.VISIBLE);
-        }
+    public void updateSearchControls() {
+
+        Handler h = new Handler(getMainLooper());
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+
+                if (getBooleanProperty("fab.show") &&
+                        prefManager.isTreeDataCollect() &&
+                        getCurrentState().getStatus().isShowSearchControls()) {
+                    fab.setVisibility(View.VISIBLE);
+                }
+
+            }
+        };
+        h.post(r);
+
     }
 
     @Override
@@ -763,8 +745,58 @@ public class MainActivity extends AppCompatActivity
         return (DeviceSelectFragment) getSupportFragmentManager().findFragmentByTag(DeviceSelectFragment.TAG);
     }
 
-    private StatusBottomSheetFragment getStatusFragment() {
-        return (StatusBottomSheetFragment) getSupportFragmentManager().findFragmentByTag(StatusBottomSheetFragment.TAG);
+    /**
+     * Update status of the frontend and push it to {@link #states}.
+     * @param state the state the aplication is currently in
+     */
+    private void updateStatus(@NonNull TransferState state) {
+
+        TransferState currentState = this.getCurrentState();
+        if (state.getStatus() == currentState.getStatus()) {
+            currentState.updateWith(state);
+            return;
+        }
+        this.states.push(state);
+        Handler h = new Handler(getMainLooper());
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript(
+                        "updateTransferStatus('" + state.getStatus().name() + "');",
+                        null
+                );
+            }
+        };
+        h.post(r);
+
+    }
+
+    private TransferState getCurrentState() {
+        if (this.states == null || this.states.size() == 0) {
+            return new TransferState(TransferStatus.NOT_YET_STARTED);
+        }
+        return this.states.peek();
+    }
+
+    /**
+     * TODO
+     */
+    private void updateTransferStats() {
+
+        final int storedLogsAmount = MainActivity.this.uartManager.getSuccessfulCommands().<UARTLogEntry[]>findResponse(UARTResponseType.LOG_ENTRY).getValue().length;
+
+        Handler h = new Handler(getMainLooper());
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                webView.evaluateJavascript(
+                        "updateTransferStats(" + storedLogsAmount + ");",
+                        null
+                );
+            }
+        };
+        h.post(r);
+
     }
 
 }

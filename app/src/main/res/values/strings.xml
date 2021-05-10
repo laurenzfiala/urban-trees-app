@@ -41,7 +41,7 @@
     <string name="comm_device_connected">Successfully connected to beacon</string>
     <string name="comm_device_get_data">Receiving data from beacon</string>
     <string name="comm_device_send_data">Sending beacon data</string>
-    <string name="comm_device_cencelling">Cancelling beacon connection...</string>
+    <string name="comm_device_cancelling">Cancelling beacon connection...</string>
 
     <!-- WEBVIEW -->
     <string name="webview_resource_failed">Could not reach the webserver to show the website. Please try again or close the app.</string>
