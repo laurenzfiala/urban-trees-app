@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity
     private PreferenceManager prefManager;
     private BluetoothDevice selectedDevice;
     private Stack<TransferState> states;
+    private boolean isApiKeyStored = false;
 
     // ----- WEBVIEW -----
     private CustomWebViewClient webViewClient;
@@ -701,14 +702,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onWebviewPageFinished(final String url) {
-        this.webView.evaluateJavascript(
-                "localStorage.setItem('"
-                        + this.getProperty("api.key.localStorage.key")
-                        + "','"
-                        + this.getProperty("api.key")
-                        + "'); refreshLogin();",
-                null
-        );
+        if (!this.isApiKeyStored) {
+            this.webView.evaluateJavascript(
+                    "localStorage.setItem('"
+                            + this.getProperty("api.key.localStorage.key")
+                            + "','"
+                            + this.getProperty("api.key")
+                            + "'); refreshLogin();",
+                    null
+            );
+            this.isApiKeyStored = true;
+        }
 
         if (this.getCurrentState().getStatus() == TransferStatus.PREPARE_READOUT &&
             url.equals(this.getProperty("beacontransfer.load.address", this.selectedDevice.getBeacon().getId()))) {
