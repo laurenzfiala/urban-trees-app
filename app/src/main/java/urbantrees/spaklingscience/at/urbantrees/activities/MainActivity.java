@@ -120,7 +120,6 @@ public class MainActivity extends AppCompatActivity
         this.webChromeClient = new CustomWebChromeClient(this);
 
         this.webView = (WebView) findViewById(R.id.web_view);
-        this.webView.getSettings().setAppCacheEnabled(true);
         this.webView.getSettings().setJavaScriptEnabled(true);
         this.webView.getSettings().setDomStorageEnabled(true);
         this.webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
@@ -348,7 +347,7 @@ public class MainActivity extends AppCompatActivity
             this.uartManager = new UARTManager(this, this, this.bluetoothCoordinator, this);
         }
 
-        BeaconLogger.debug(device, "Device was selected. Receiving connection parameters.");
+        BeaconLogger.trace(device, "Device was selected.");
         this.states = new Stack<>();
         this.selectedDevice = device;
         this.updateStatus(new TransferState(TransferStatus.PREPARE_READOUT));
@@ -359,16 +358,20 @@ public class MainActivity extends AppCompatActivity
 
     private void startTransfer() {
 
-        this.httpManager.getBeaconSettings(this.selectedDevice.getBeacon().getId(), new Callback<BeaconSettings>() {
+        Log.i(LOGGING_TAG, "startTransfer()");
+        BeaconLogger.debug(this.selectedDevice, "Receiving connection parameters.");
+
+        Beacon beacon = this.selectedDevice.getBeacon();
+        this.httpManager.getBeaconSettings(beacon.getId(), new Callback<BeaconSettings>() {
             @Override
             public void call(BeaconSettings beaconSettings) {
+                Log.d(LOGGING_TAG, "httpManager.getBeaconSettings(" + beacon + ") successful");
                 selectedDevice.getBeacon().setSettings(beaconSettings);
                 MainActivity.this.uartManager.start(selectedDevice);
             }
 
             @Override
             public void error(Throwable t) {
-                Log.e(LOGGING_TAG, t.getMessage(), t);
                 Dialogs.statusDialog(
                         MainActivity.this,
                         new Status(
@@ -702,6 +705,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onWebviewPageFinished(final String url) {
+        Log.d(LOGGING_TAG, "onWebviewPageFinished(" + url + ")");
         if (!this.isApiKeyStored) {
             this.webView.evaluateJavascript(
                     "localStorage.setItem('"
@@ -714,10 +718,15 @@ public class MainActivity extends AppCompatActivity
             this.isApiKeyStored = true;
         }
 
-        if (this.getCurrentState().getStatus() == TransferStatus.PREPARE_READOUT &&
-            url.equals(this.getProperty("beacontransfer.load.address", this.selectedDevice.getBeacon().getId()))) {
-            this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_GET_SETTINGS, 10));
-            this.startTransfer();
+        if (this.getCurrentState().getStatus() == TransferStatus.PREPARE_READOUT) {
+            Log.d(LOGGING_TAG, "prepare readout");
+            if (url.equals(this.getProperty("beacontransfer.load.address", this.selectedDevice.getBeacon().getId()))) {
+                Log.d(LOGGING_TAG, "url matches beacontransfer page");
+                this.updateStatus(new TransferState(TransferStatus.COMM_DEVICE_GET_SETTINGS, 10));
+                this.startTransfer();
+            } else {
+                Log.d(LOGGING_TAG, "url doesn't match beacontransfer page");
+            }
         }
     }
 

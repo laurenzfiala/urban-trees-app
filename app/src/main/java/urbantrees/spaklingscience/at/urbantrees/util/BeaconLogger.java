@@ -39,7 +39,7 @@ public class BeaconLogger {
 
     public static void trace(BluetoothDevice device, String message) {
         if (device == null || device.getBeacon() == null) {
-            Log.w(LOGGING_TAG, "Can't log beacon message, device identifier undefined.");
+            Log.w(LOGGING_TAG, "Can't log beacon message, device or beacon undefined.");
             return;
         }
         trace(device.getBeacon().getId(), message);

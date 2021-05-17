@@ -119,7 +119,7 @@ public class HttpManager extends HasContext {
 
             callbackFn.call(settings);
 
-        }catch (Throwable t) {
+        } catch (Throwable t) {
             Log.e(LOGGING_TAG, t.getMessage(), t);
             callbackFn.error(t);
         }

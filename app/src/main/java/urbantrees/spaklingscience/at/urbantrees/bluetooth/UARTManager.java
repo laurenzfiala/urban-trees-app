@@ -232,6 +232,8 @@ public class UARTManager extends HasContext implements UARTCallbackHandler.OnUAR
 
     public void start(BluetoothDevice device) {
 
+        Log.i(LOGGING_TAG, "start(" + device + ")");
+
         this.afterLockCheck = false;
         this.commandTriesExceeded = false;
         this.unlockDevice = true;
