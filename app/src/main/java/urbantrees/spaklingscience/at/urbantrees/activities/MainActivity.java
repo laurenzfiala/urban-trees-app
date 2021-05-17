@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Load device stored preferences.onWebviewError
+     * Load device stored preferences.
      */
     private void loadPreferences() {
         this.prefManager = new PreferenceManager(this);
@@ -169,18 +169,28 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
+        Log.d(LOGGING_TAG, "onPause()");
         super.onPause();
         this.webView.onPause();
     }
 
     @Override
+    protected void onStop() {
+        Log.d(LOGGING_TAG, "onStop()");
+        super.onStop();
+        this.onUserCancel();
+    }
+
+    @Override
     protected void onResume() {
+        Log.d(LOGGING_TAG, "onResume()");
         super.onResume();
         this.webView.onResume();
     }
 
     @Override
     protected void onDestroy() {
+        Log.i(LOGGING_TAG, "onDestroy()");
         super.onDestroy();
         this.webView.destroy();
     }
@@ -192,6 +202,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        Log.i(LOGGING_TAG, "onActivityResult(" + requestCode + ", " + resultCode + ", " + intent + ")");
         super.onActivityResult(requestCode, resultCode, intent);
 
         switch (requestCode) {
@@ -221,7 +232,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDeviceSelectOpened() {
 
-        Log.d(MainActivity.LOGGING_TAG, "onFragmentOpened - Start bluetooth scanning");
+        Log.d(MainActivity.LOGGING_TAG, "onDeviceSelectOpened() - Start bluetooth scanning");
         this.getDeviceSelectFragment().onLoadDeviceList();
 
         Runnable r = new Runnable() {
@@ -706,6 +717,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onWebviewPageFinished(final String url) {
         Log.d(LOGGING_TAG, "onWebviewPageFinished(" + url + ")");
+
+        this.updateSearchControls();
         if (!this.isApiKeyStored) {
             this.webView.evaluateJavascript(
                     "localStorage.setItem('"

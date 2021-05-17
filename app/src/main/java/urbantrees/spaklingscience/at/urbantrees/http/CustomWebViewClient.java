@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import urbantrees.spaklingscience.at.urbantrees.activities.ApplicationProperties;
+import urbantrees.spaklingscience.at.urbantrees.activities.MainActivity;
 import urbantrees.spaklingscience.at.urbantrees.activities.MainActivityInterface;
 
 /**
@@ -17,6 +19,8 @@ import urbantrees.spaklingscience.at.urbantrees.activities.MainActivityInterface
  * @since 2019/02/23
  */
 public class CustomWebViewClient extends WebViewClient {
+
+    private static final String LOGGING_TAG = CustomWebViewClient.class.getName();
 
     private MainActivityInterface mainActivity;
     private Context context;
@@ -53,27 +57,29 @@ public class CustomWebViewClient extends WebViewClient {
     @Override
     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
         super.onReceivedError(view, request, error);
-        this.mainActivity.onWebviewError(request, error);
+        if (request.isForMainFrame()) {
+            Log.i(LOGGING_TAG, "onReceivedError(" + request.getUrl() + "): " + error);
+            this.mainActivity.onWebviewError(request, error);
+        }
     }
 
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        Log.i(LOGGING_TAG, "onPageStarted(" + url + ")");
         super.onPageStarted(view, url, favicon);
         this.pageStarted = true;
     }
 
     @Override
     public void onPageFinished(WebView view, String url) {
+        Log.i(LOGGING_TAG, "onPageFinished(" + url + ")");
         super.onPageFinished(view, url);
-        if (this.pageStarted) {
-            this.mainActivity.onWebviewPageFinished(url);
-            this.mainActivity.updateSearchControls();
-        }
-        this.pageStarted = false;
+        this.mainActivity.onWebviewPageFinished(url);
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
+        Log.i(LOGGING_TAG, "shouldOverrideUrlLoading(" + url + ")");
         for (String s : this.allowedSiteUrls) {
             if (url.startsWith(s)) {
                 return false;
